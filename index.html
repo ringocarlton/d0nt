@@ -26,24 +26,22 @@
     async function loadImages() {
       const gallery = document.getElementById('gallery');
       try {
-        const response = await fetch('images/');
-        const text = await response.text();
-        const parser = new DOMParser();
-        const html = parser.parseFromString(text, 'text/html');
-        const links = Array.from(html.querySelectorAll('a'))
-          .filter(a => a.href.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-          .map(a => a.href)
-          .reverse(); // newest first
-        links.forEach(src => {
+        const response = await fetch('images.json');
+        const images = await response.json();
+
+        // newest first
+        images.reverse().forEach(filename => {
           const img = document.createElement('img');
-          img.src = src;
+          img.src = 'images/' + filename;
           img.loading = 'lazy';
           gallery.appendChild(img);
         });
-      } catch (e) {
-        gallery.innerHTML = '<p style="text-align:center;">Upload your images to the <strong>/images</strong> folder to display them here.</p>';
+      } catch (error) {
+        console.error('Error loading images:', error);
+        gallery.innerHTML = '<p style="text-align:center;">Upload your images and update <strong>images.json</strong> to display them here.</p>';
       }
     }
+
     loadImages();
   </script>
 </body>
