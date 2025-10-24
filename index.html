@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tate Choruma | Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Tate Choruma</h1>
+    <p>Tate, multidisciplinary visual artist currently in Harare, Zimbabwe.<br>
+    <a href="mailto:chorumz@gmail.com">chorumz@gmail.com</a> for any enquiries.</p>
+  </header>
+
+  <main>
+    <div id="gallery" class="image-grid"></div>
+  </main>
+
+  <footer>
+    <p>© 2025 Tate Choruma — <a href="https://instagram.com/d0ntblinkk" target="_blank">@d0ntblinkk</a></p>
+  </footer>
+
+  <script>
+    async function loadImages() {
+      const gallery = document.getElementById('gallery');
+      try {
+        const response = await fetch('images/');
+        const text = await response.text();
+        const parser = new DOMParser();
+        const html = parser.parseFromString(text, 'text/html');
+        const links = Array.from(html.querySelectorAll('a'))
+          .filter(a => a.href.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+          .map(a => a.href)
+          .reverse(); // newest first
+        links.forEach(src => {
+          const img = document.createElement('img');
+          img.src = src;
+          img.loading = 'lazy';
+          gallery.appendChild(img);
+        });
+      } catch (e) {
+        gallery.innerHTML = '<p style="text-align:center;">Upload your images to the <strong>/images</strong> folder to display them here.</p>';
+      }
+    }
+    loadImages();
+  </script>
+</body>
+</html>
