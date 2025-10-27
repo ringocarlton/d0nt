@@ -34,6 +34,11 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+
+    .icon img:hover {
+      transform: scale(1.05);
     }
 
     .icon span {
@@ -50,10 +55,53 @@
         height: 80px;
       }
     }
+
+    /* Lightbox styles */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      transition: transform 0.3s ease;
+    }
+
+    .lightbox:active,
+    .lightbox img:active {
+      transform: scale(0.98);
+    }
+
+    .lightbox.visible {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
   <div class="desktop" id="imageContainer"></div>
+
+  <!-- Lightbox overlay -->
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Preview" id="lightboxImage" />
+  </div>
 
   <script>
     // Fetch image filenames from images.json
@@ -62,30 +110,30 @@
       .then((images) => {
         const container = document.getElementById("imageContainer");
 
-        images.forEach((imgName, index) => {
+        images.forEach((imgName) => {
           const icon = document.createElement("div");
           icon.classList.add("icon");
           icon.setAttribute("draggable", "true");
 
-          // Random initial positions
+          // Random starting positions
           const left = 50 + Math.random() * (window.innerWidth - 150);
           const top = 80 + Math.random() * (window.innerHeight - 180);
-
           icon.style.left = `${left}px`;
           icon.style.top = `${top}px`;
 
           icon.innerHTML = `
-            <img src="images/${imgName}" alt="${imgName}" loading="lazy">
+            <img src="images/${imgName}" alt="${imgName}">
             <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
           `;
           container.appendChild(icon);
         });
 
         enableDragging();
+        enableLightbox();
       })
       .catch((error) => console.error("Error loading images:", error));
 
-    // Enable drag functionality for desktop + mobile
+    // Enable drag functionality
     function enableDragging() {
       document.querySelectorAll(".icon").forEach((icon) => {
         let isDragging = false;
@@ -122,6 +170,23 @@
           document.removeEventListener("mouseup", endDrag);
           document.removeEventListener("touchend", endDrag);
         }
+      });
+    }
+
+    // Enable lightbox functionality
+    function enableLightbox() {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+
+      document.querySelectorAll(".icon img").forEach((img) => {
+        img.addEventListener("click", () => {
+          lightboxImage.src = img.src;
+          lightbox.classList.add("visible");
+        });
+      });
+
+      lightbox.addEventListener("click", () => {
+        lightbox.classList.remove("visible");
       });
     }
   </script>
