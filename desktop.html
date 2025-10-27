@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mac Desktop Test</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
+      font-family: "IBM Plex Mono", monospace;
+      overflow: hidden;
+    }
+
+    .desktop {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .icon {
+      position: absolute;
+      width: 100px;
+      text-align: center;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s ease;
+    }
+
+    .icon img {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      object-fit: cover;
+    }
+
+    .icon span {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      color: #333;
+    }
+
+    @media (max-width: 768px) {
+      .icon, .icon img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop">
+    <div class="icon" draggable="true" style="left: 50px; top: 100px;">
+      <img src="images/digital1.jpg" alt="Digital 1">
+      <span>Digital 1</span>
+    </div>
+    <div class="icon" draggable="true" style="left: 200px; top: 300px;">
+      <img src="images/installation1.jpg" alt="Installation 1">
+      <span>Installation 1</span>
+    </div>
+    <div class="icon" draggable="true" style="left: 400px; top: 200px;">
+      <img src="images/film1.jpg" alt="Film 1">
+      <span>Film 1</span>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.icon').forEach(icon => {
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      icon.addEventListener('mousedown', startDrag);
+      icon.addEventListener('touchstart', startDrag);
+
+      function startDrag(e) {
+        isDragging = true;
+        icon.style.cursor = 'grabbing';
+        const event = e.touches ? e.touches[0] : e;
+        offsetX = event.clientX - icon.offsetLeft;
+        offsetY = event.clientY - icon.offsetTop;
+
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('touchmove', drag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+      }
+
+      function drag(e) {
+        if (!isDragging) return;
+        const event = e.touches ? e.touches[0] : e;
+        icon.style.left = event.clientX - offsetX + 'px';
+        icon.style.top = event.clientY - offsetY + 'px';
+      }
+
+      function endDrag() {
+        isDragging = false;
+        icon.style.cursor = 'grab';
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('touchmove', drag);
+        document.removeEventListener('mouseup', endDrag);
+        document.removeEventListener('touchend', endDrag);
+      }
+    });
+  </script>
+</body>
+</html>
