@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Tate Interactive Test</title>
+<style>
+:root{
+  --bg-light: linear-gradient(180deg,#d9e0e7 0%,#cdd5df 100%);
+  --bg-dark: linear-gradient(180deg,#0f1112 0%,#1b1b1d 100%);
+  --text-light:#222;
+  --text-dark:#f2f2f2;
+  --accent: rgba(0,0,0,0.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "IBM Plex Mono", monospace, monospace;
+  background:var(--bg-light);
+  color:var(--text-light);
+  overflow:hidden;
+  transition:background .6s ease,color .4s ease;
+  background-position:50% 50%;
+}
+body.dark{
+  background:var(--bg-dark);
+  color:var(--text-dark);
+}
+
+/* Desktop area */
+.desktop{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* Icon style */
+.icon{
+  position:absolute;
+  width:110px;
+  text-align:center;
+  cursor:grab;
+  user-select:none;
+  transform:translateY(10px);
+  opacity:0;
+  transition:transform .6s cubic-bezier(.22,.9,.3,1),opacity .6s;
+}
+.icon.show{ transform:none; opacity:1; }
+.icon img{
+  width:110px;
+  height:110px;
+  border-radius:12px;
+  object-fit:cover;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.icon img:hover{ transform:scale(1.04); box-shadow:0 8px 26px rgba(0,0,0,.25); }
+.icon span{ display:block; margin-top:8px; font-size:12px; pointer-events:none; }
+
+/* Lightbox */
+.lightbox{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  background:rgba(0,0,0,.85);
+  align-items:center;
+  justify-content:center;
+  backdrop-filter: blur(6px);
+}
+.lightbox.visible{ display:flex; animation:fadeIn .25s ease; }
+.lightbox img{ max-width:92%; max-height:92%; border-radius:12px; box-shadow:0 30px 80px rgba(0,0,0,.6); transition:transform .2s ease; }
+
+/* Theme toggle */
+.theme-toggle{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:1100;
+  width:50px; height:50px;
+  border-radius:999px;
+  border:0;
+  background:rgba(255,255,255,.6);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  font-size:20px;
+  backdrop-filter: blur(6px);
+  transition:transform .18s ease, background .25s;
+}
+body.dark .theme-toggle{ background:rgba(20,20,20,.6); color:#fff; }
+
+/* About window */
+.about{
+  position:fixed;
+  left:20px;
+  top:20px;
+  z-index:1005;
+  width:320px;
+  max-width:calc(100% - 40px);
+  background:rgba(255,255,255,.9);
+  padding:12px 14px;
+  border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  display:none;
+}
+body.dark .about{ background:rgba(22,22,22,.7); color:var(--text-dark); }
+.about.visible{ display:block; animation:slideDown .28s ease; }
+.about h3{ margin:0 0 6px; font-size:16px; }
+.about p{ margin:0; font-size:13px; opacity:.9; }
+.close-about{ position:absolute; right:8px; top:8px; background:transparent; border:0; cursor:pointer; font-size:14px; }
+
+/* Ripple effect */
+.ripple {
+  position:absolute;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  width:8px; height:8px;
+  background:rgba(255,255,255,.7);
+  animation:rip .5s ease-out forwards;
+}
+@keyframes rip{ 0%{opacity:0.9; transform:translate(-50%,-50%) scale(0.2);} 100%{opacity:0; transform:translate(-50%,-50%) scale(12);} }
+
+/* Small helpers */
+kbd{ font-family:monospace; padding:2px 6px; border-radius:6px; background:#000; color:#fff; font-size:12px; }
+
+/* Responsive tweaks */
+@media (max-width:768px){
+  .icon{ width:86px; }
+  .icon img{ width:86px; height:86px; }
+  .about{ width:90%; left:5%; top:8px; }
+}
+@keyframes slideDown{from{opacity:0; transform:translateY(-6px)} to{opacity:1; transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="desktop" id="imageContainer" aria-live="polite"></div>
+
+<!-- lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-hidden="true"><img id="lightboxImage" src="" alt="preview"></div>
+
+<!-- about -->
+<div class="about" id="about">
+  <button class="close-about" id="closeAbout">✕</button>
+  <h3>Tate — interactive test</h3>
+  <p>Multidisciplinary visual artist. Drag icons, click to open. Press <kbd>L</kbd> to toggle theme, <kbd>Space</kbd> to randomize, <kbd>Esc</kbd> to close preview.</p>
+</div>
+
+<!-- theme toggle -->
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">🌙</button>
+
+<script>
+// Utility functions
+const $ = selector => document.querySelector(selector);
+const $$ = selector => Array.from(document.querySelectorAll(selector));
+
+// Config
+const JSON_PATH = 'images.json';
+const container = $('#imageContainer');
+let imagesList = [];
+
+// Load images.json and create icons
+fetch(JSON_PATH)
+  .then(r => r.json())
+  .then(images => {
+    imagesList = images;
+    images.forEach((name, i) => {
+      const el = document.createElement('div');
+      el.className = 'icon';
+      el.setAttribute('data-name', name);
+      el.innerHTML = `<img src="images/${name}" alt="${name}" loading="lazy"><span>${name.replace(/\.[^/.]+$/, '')}</span>`;
+      // initial positions (grid-ish but jittered)
+      const cols = Math.max(3, Math.floor(window.innerWidth / 220));
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const left = 40 + col * 140 + (Math.random()*30 - 15);
+      const top = 90 + row * 160 + (Math.random()*30 - 15);
+      el.style.left = left + 'px';
+      el.style.top = top + 'px';
+      container.appendChild(el);
+      // staggered fade-in
+      setTimeout(()=> el.classList.add('show'), 80*i);
+    });
+    initInteractions();
+  })
+  .catch(err => {
+    console.error('Could not load images.json', err);
+    container.innerHTML = '<p style="padding:20px">Error loading images.json</p>';
+  });
+
+/* Interactions: drag, touch, click, keyboard */
+function initInteractions(){
+  // drag & touch
+  $$('.icon').forEach(el => {
+    let dragging=false, offsetX=0, offsetY=0;
+    const img = el.querySelector('img');
+
+    const start = e => {
+      e.preventDefault();
+      dragging = true;
+      el.style.zIndex = 1000;
+      el.style.cursor = 'grabbing';
+      const ev = e.touches ? e.touches[0] : e;
+      offsetX = ev.clientX - el.offsetLeft;
+      offsetY = ev.clientY - el.offsetTop;
+      document.addEventListener('mousemove', move);
+      document.addEventListener('touchmove', move, {passive:false});
+      document.addEventListener('mouseup', end);
+      document.addEventListener('touchend', end);
+    };
+    const move = e => {
+      if(!dragging) return;
+      const ev = e.touches ? e.touches[0] : e;
+      let x = ev.clientX - offsetX;
+      let y = ev.clientY - offsetY;
+      // clamp within viewport
+      x = Math.max(8, Math.min(window.innerWidth - el.offsetWidth - 8, x));
+      y = Math.max(8, Math.min(window.innerHeight - el.offsetHeight - 8, y));
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+    };
+    const end = e => {
+      dragging = false;
+      el.style.cursor = 'grab';
+      el.style.zIndex = '';
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchend', end);
+    };
+
+    el.addEventListener('mousedown', start);
+    el.addEventListener('touchstart', start, {passive:true});
+
+    // click opens lightbox, with ripple effect
+    img.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      ripple(ev.clientX, ev.clientY);
+      openLightbox(img.src, el.getAttribute('data-name'));
+    });
+  });
+
+  // background parallax on mousemove
+  window.addEventListener('mousemove', e => {
+    const x = (e.clientX / window.innerWidth - 0.5) * 10;
+    const y = (e.clientY / window.innerHeight - 0.5) * 6;
+    document.body.style.backgroundPosition = `${50 + x}% ${50 + y}%`;
+  });
+
+  // keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape') closeLightbox();
+    if(e.key.toLowerCase() === 'l') toggleTheme();
+    if(e.code === 'Space') {
+      e.preventDefault();
+      randomizePositions();
+    }
+  });
+
+  // theme init
+  initTheme();
+
+  // about popup (double-tap area left top)
+  let about = $('#about');
+  let aboutVisible = false;
+  document.addEventListener('dblclick', (e) => {
+    // show about
+    about.classList.toggle('visible');
+  });
+  $('#closeAbout').addEventListener('click', ()=> about.classList.remove('visible'));
+}
+
+/* Lightbox functions */
+const lightbox = $('#lightbox');
+const lightboxImage = $('#lightboxImage');
+
+function openLightbox(src, name){
+  lightboxImage.src = src;
+  lightbox.setAttribute('aria-hidden', 'false');
+  lightbox.classList.add('visible');
+  // simple caption in alt
+  lightboxImage.alt = name;
+}
+function closeLightbox(){
+  lightbox.classList.remove('visible');
+  lightbox.setAttribute('aria-hidden', 'true');
+}
+
+/* Ripple effect */
+function ripple(x,y){
+  const r = document.createElement('div');
+  r.className = 'ripple';
+  r.style.left = x + 'px';
+  r.style.top = y + 'px';
+  document.body.appendChild(r);
+  setTimeout(()=> r.remove(), 600);
+}
+lightbox.addEventListener('click', closeLightbox);
+
+/* Theme toggle and persistence */
+const toggle = $('#themeToggle');
+function initTheme(){
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const saved = localStorage.getItem('theme');
+  if(saved === 'dark' || (!saved && prefersDark)) {
+    document.body.classList.add('dark');
+    toggle.textContent = '☀️';
+  } else {
+    toggle.textContent = '🌙';
+  }
+}
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  const dark = document.body.classList.contains('dark');
+  toggle.textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
+}
+toggle.addEventListener('click', ()=> toggleTheme());
+
+/* Randomize positions (space) */
+function randomizePositions(){
+  $$('.icon').forEach((el, i) => {
+    const left = 40 + Math.random() * (window.innerWidth - el.offsetWidth - 80);
+    const top = 80 + Math.random() * (window.innerHeight - el.offsetHeight - 160);
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+  });
+}
+
+/* small accessibility: focus first icon on tab */
+window.addEventListener('keydown', e => {
+  if(e.key === 'Tab') {
+    const first = document.querySelector('.icon');
+    if(first) first.tabIndex = 0;
+  }
+});
+</script>
+</body>
+</html>
