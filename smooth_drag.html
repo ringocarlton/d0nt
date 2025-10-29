@@ -1,137 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>d0ntblinkk - Smooth Drag Portfolio</title>
-<style>
-:root{
-  --bg-light: linear-gradient(180deg,#d9e0e7 0%,#cdd5df 100%);
-  --bg-dark: linear-gradient(180deg,#0f1112 0%,#1b1b1d 100%);
-  --text-light:#222;
-  --text-dark:#f2f2f2;
-}
-*{box-sizing:border-box;}
-body{margin:0;font-family:"IBM Plex Mono", monospace;overflow:hidden;transition:background .6s,color .4s; background:var(--bg-light); color:var(--text-light);}
-body.dark{background:var(--bg-dark);color:var(--text-dark);}
-.desktop{position:relative;width:100vw;height:100vh;overflow:hidden;}
-.icon{position:absolute;width:110px;text-align:center;cursor:grab;user-select:none;opacity:0;transition:opacity .6s;}
-.icon.show{opacity:1;}
-.icon img{width:110px;height:110px;border-radius:12px;object-fit:cover;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .18s ease, box-shadow .18s ease;}
-.icon img:hover{transform:scale(1.04);box-shadow:0 8px 26px rgba(0,0,0,.25);}
-.icon span{display:block;margin-top:8px;font-size:12px;pointer-events:none;}
-.lightbox{display:none;position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.85);align-items:center;justify-content:center;backdrop-filter: blur(6px);}
-.lightbox.visible{display:flex;}
-.lightbox img{max-width:92%;max-height:92%;border-radius:12px;box-shadow:0 30px 80px rgba(0,0,0,.6);}
-.theme-toggle{position:fixed;right:18px;bottom:18px;width:50px;height:50px;border-radius:999px;border:0;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;backdrop-filter: blur(6px);transition:transform .18s ease, background .25s;}
-body.dark .theme-toggle{background:rgba(20,20,20,.6);color:#fff;}
-.about{position:fixed;left:20px;top:20px;width:320px;max-width:calc(100% - 40px);background:rgba(255,255,255,.9);padding:12px 14px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);display:none;}
-body.dark .about{background:rgba(22,22,22,.7);color:var(--text-dark);}
-.about.visible{display:block;}
-.about h3{margin:0 0 6px;font-size:16px;}
-.about p{margin:0;font-size:13px;opacity:.9;}
-.close-about{position:absolute;right:8px;top:8px;background:transparent;border:0;cursor:pointer;font-size:14px;}
-@media (max-width:768px){.icon{width:86px;}.icon img{width:86px;height:86px;}.about{width:90%;left:5%;top:8px;}}
-</style>
-</head>
-<body>
-<div class="desktop" id="imageContainer"></div>
-<div class="lightbox" id="lightbox"><img id="lightboxImage" src="" alt=""></div>
-<div class="about" id="about">
-  <button class="close-about" id="closeAbout">✕</button>
-  <h3>d0ntblinkk Interactive</h3>
-  <p>Drag icons smoothly. Press <kbd>L</kbd> for theme, <kbd>Space</kbd> to shuffle, <kbd>Esc</kbd> to close preview.</p>
-</div>
-<button class="theme-toggle" id="themeToggle">🌙</button>
-<script>
-const container = document.getElementById('imageContainer');
-const JSON_PATH = 'images.json';
-let imagesList = [];
-fetch(JSON_PATH).then(r=>r.json()).then(images=>{
-  imagesList = images;
-  images.forEach((name,i)=>{
-    const el=document.createElement('div');
-    el.className='icon';
-    el.dataset.name=name;
-    el.innerHTML=`<img src='images/${name}' alt='${name}'><span>${name.replace(/\.[^/.]+$/,'')}</span>`;
-    const cols = Math.max(3, Math.floor(window.innerWidth/220));
-    const col=i%cols;
-    const row=Math.floor(i/cols);
-    const left=40+col*140+(Math.random()*30-15);
-    const top=90+row*160+(Math.random()*30-15);
-    el.style.transform=`translate3d(${left}px,${top}px,0)`;
-    container.appendChild(el);
-    setTimeout(()=>el.classList.add('show'), 80*i);
-  });
-  initDrag();
-});
-
-function initDrag(){
-  document.querySelectorAll('.icon').forEach(icon=>{
-    let isDragging=false, startX=0, startY=0, origX=0, origY=0, currentX=0, currentY=0;
-    icon.addEventListener('mousedown',startDrag);
-    icon.addEventListener('touchstart',startDrag,{passive:true});
-    function startDrag(e){
-      e.preventDefault();
-      isDragging=true;
-      const ev = e.touches?e.touches[0]:e;
-      startX=ev.clientX;
-      startY=ev.clientY;
-      const transform=icon.style.transform.match(/translate3d\(([-0-9.]+)px,([-0-9.]+)px,0\)/);
-      origX=transform?parseFloat(transform[1]):0;
-      origY=transform?parseFloat(transform[2]):0;
-      document.addEventListener('mousemove',dragMove);
-      document.addEventListener('touchmove',dragMove,{passive:false});
-      document.addEventListener('mouseup',endDrag);
-      document.addEventListener('touchend',endDrag);
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>d0nt.blinkk — Smooth Drag Test</title>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
+      font-family: "IBM Plex Mono", monospace;
+      overflow: hidden;
     }
-    let rafPending=false;
-    function dragMove(e){
-      if(!isDragging)return;
-      const ev=e.touches?e.touches[0]:e;
-      currentX=origX+ev.clientX-startX;
-      currentY=origY+ev.clientY-startY;
-      if(!rafPending){
-        rafPending=true;
-        requestAnimationFrame(()=>{
-          icon.style.transform=`translate3d(${currentX}px,${currentY}px,0)`;
-          rafPending=false;
-        });
+
+    .desktop {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .icon {
+      position: absolute;
+      width: 100px;
+      text-align: center;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.1s ease-out;
+      touch-action: none;
+      will-change: transform;
+    }
+
+    .icon img {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+
+    .icon img:hover {
+      transform: scale(1.05);
+    }
+
+    .icon span {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      color: #333;
+    }
+
+    @media (max-width: 768px) {
+      .icon,
+      .icon img {
+        width: 80px;
+        height: 80px;
       }
     }
-    function endDrag(){
-      isDragging=false;
-      document.removeEventListener('mousemove',dragMove);
-      document.removeEventListener('touchmove',dragMove);
-      document.removeEventListener('mouseup',endDrag);
-      document.removeEventListener('touchend',endDrag);
+
+    /* Lightbox styles */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(8px);
     }
-    icon.querySelector('img').addEventListener('click',()=>{
-      openLightbox(icon.querySelector('img').src,icon.dataset.name);
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      transition: transform 0.3s ease;
+    }
+
+    .lightbox:active,
+    .lightbox img:active {
+      transform: scale(0.98);
+    }
+
+    .lightbox.visible {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop" id="imageContainer"></div>
+
+  <!-- Lightbox overlay -->
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Preview" id="lightboxImage" />
+  </div>
+
+  <script>
+    // Example test images (you can replace with your actual images)
+    const images = ["https://picsum.photos/200?random=1", "https://picsum.photos/200?random=2", "https://picsum.photos/200?random=3"];
+
+    const container = document.getElementById("imageContainer");
+
+    images.forEach((imgSrc, i) => {
+      const icon = document.createElement("div");
+      icon.classList.add("icon");
+      const left = 80 + Math.random() * (window.innerWidth - 180);
+      const top = 100 + Math.random() * (window.innerHeight - 200);
+      icon.style.left = `${left}px`;
+      icon.style.top = `${top}px`;
+
+      icon.innerHTML = `
+        <img src="${imgSrc}" alt="Image ${i + 1}">
+        <span>Image ${i + 1}</span>
+      `;
+      container.appendChild(icon);
     });
-  });
-}
 
-const lightbox=document.getElementById('lightbox');
-const lightboxImage=document.getElementById('lightboxImage');
-function openLightbox(src,name){lightboxImage.src=src;lightboxImage.alt=name;lightbox.classList.add('visible');}
-function closeLightbox(){lightbox.classList.remove('visible');}
-lightbox.addEventListener('click',closeLightbox);
+    enableDragging();
+    enableLightbox();
 
-const toggle=document.getElementById('themeToggle');
-function initTheme(){
-  const dark=localStorage.getItem('theme')==='dark'||(window.matchMedia('(prefers-color-scheme: dark)').matches&&!localStorage.getItem('theme'));
-  if(dark)document.body.classList.add('dark');
-  toggle.textContent=dark?'☀️':'🌙';
-}
-function toggleTheme(){document.body.classList.toggle('dark');localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');toggle.textContent=document.body.classList.contains('dark')?'☀️':'🌙';}
-toggle.addEventListener('click',toggleTheme);
-initTheme();
+    // Smooth, GPU-accelerated dragging
+    function enableDragging() {
+      document.querySelectorAll(".icon").forEach((icon) => {
+        let isDragging = false;
+        let offsetX = 0, offsetY = 0;
+        let pendingX = 0, pendingY = 0;
+        let rafId = null;
 
-document.getElementById('closeAbout').addEventListener('click',()=>document.getElementById('about').classList.remove('visible'));
-document.addEventListener('dblclick',()=>document.getElementById('about').classList.toggle('visible'));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();if(e.key.toLowerCase()==='l')toggleTheme();if(e.code==='Space'){e.preventDefault();shufflePositions();}});
-function shufflePositions(){document.querySelectorAll('.icon').forEach(el=>{const left=Math.random()*(window.innerWidth-120);const top=Math.random()*(window.innerHeight-160);el.style.transform=`translate3d(${left}px,${top}px,0)`;});}
-</script>
+        icon.addEventListener("mousedown", startDrag);
+        icon.addEventListener("touchstart", startDrag, { passive: false });
+
+        function startDrag(e) {
+          e.preventDefault();
+          isDragging = true;
+          icon.style.cursor = "grabbing";
+
+          const event = e.touches ? e.touches[0] : e;
+          const rect = icon.getBoundingClientRect();
+          offsetX = event.clientX - rect.left;
+          offsetY = event.clientY - rect.top;
+
+          pendingX = rect.left;
+          pendingY = rect.top;
+
+          document.addEventListener("mousemove", drag);
+          document.addEventListener("touchmove", drag, { passive: false });
+          document.addEventListener("mouseup", endDrag);
+          document.addEventListener("touchend", endDrag);
+        }
+
+        function drag(e) {
+          if (!isDragging) return;
+          const event = e.touches ? e.touches[0] : e;
+
+          pendingX = event.clientX - offsetX;
+          pendingY = event.clientY - offsetY;
+
+          if (!rafId) {
+            rafId = requestAnimationFrame(updatePosition);
+          }
+        }
+
+        function updatePosition() {
+          rafId = null;
+          icon.style.transform = `translate(${pendingX}px, ${pendingY}px)`;
+        }
+
+        function endDrag() {
+          if (!isDragging) return;
+          isDragging = false;
+          icon.style.cursor = "grab";
+
+          // Commit transform to absolute position
+          icon.style.left = pendingX + "px";
+          icon.style.top = pendingY + "px";
+          icon.style.transform = "none";
+
+          document.removeEventListener("mousemove", drag);
+          document.removeEventListener("touchmove", drag);
+          document.removeEventListener("mouseup", endDrag);
+          document.removeEventListener("touchend", endDrag);
+        }
+      });
+    }
+
+    // Lightbox preview
+    function enableLightbox() {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+
+      document.querySelectorAll(".icon img").forEach((img) => {
+        img.addEventListener("click", () => {
+          lightboxImage.src = img.src;
+          lightbox.classList.add("visible");
+        });
+      });
+
+      lightbox.addEventListener("click", () => {
+        lightbox.classList.remove("visible");
+      });
+    }
+  </script>
 </body>
 </html>
