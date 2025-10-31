@@ -74,6 +74,7 @@
     .about-card{max-width:680px;background:var(--accent);color:#000;padding:22px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
     body.dark .about-card{background:linear-gradient(180deg,#14161b,#20232b);color:#fff}
 
+    .idle .contact-info{opacity:.7}
     .hidden{display:none!important}
   </style>
 </head>
@@ -88,9 +89,7 @@
   <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
     <div class="about-card">
       <h3>about</h3>
-      <p style="margin-top:8px">
-        d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate.
-      </p>
+      <p style="margin-top:8px">d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate (I will obviously tweak it more).</p>
       <p style="margin-top:12px;font-size:13px;color:rgba(0,0,0,.7)">Contact: <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">instagram.com/d0nt.blinkk</a></p>
       <div style="text-align:right;margin-top:12px">
         <button id="closeAbout" style="padding:6px 10px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer">close</button>
@@ -103,7 +102,6 @@
   </div>
 
   <div class="contact-info">© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">d0nt.blinkk</a></div>
-
   <div class="desktop" id="desktop"></div>
 
   <div class="lightbox" id="lightbox" aria-hidden="true">
@@ -125,47 +123,58 @@
     const aboutBtn = document.getElementById('aboutBtn');
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
-    let driftAnim=null;
 
-    fetch('images.json').then(r=>r.json()).then(images=>{
-      images.forEach(name=>createIcon(name));
-      startDrift(); // smooth floating on load
-    }).catch(err=>console.error('images.json load error',err));
+    // Create icons
+    fetch('images.json')
+      .then(r=>r.json())
+      .then(images=>{ images.forEach(name=>createIcon(name)); startDrift(); })
+      .catch(err=>console.error('images.json load error',err));
 
     function createIcon(filename){
-      const icon=document.createElement('div');
+      const icon = document.createElement('div');
       icon.className='icon';
-      const left=40+Math.random()*(window.innerWidth-200);
-      const top=60+Math.random()*(window.innerHeight-220);
-      icon.style.left=`${left}px`; icon.style.top=`${top}px`;
-      icon.innerHTML=`<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
+      const left = 40 + Math.random()*(window.innerWidth-200);
+      const top = 60 + Math.random()*(window.innerHeight-220);
+      icon.style.left = `${left}px`;
+      icon.style.top = `${top}px`;
+      icon.innerHTML = `<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
       desktop.appendChild(icon);
 
-      const img=icon.querySelector('img');
-      let isDragging=false,startX=0,startY=0,offsetX=0,offsetY=0,moved=false,lastX=0,lastY=0,lastTime=0,vx=0,vy=0;
-      const isTouchDevice=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+      const img = icon.querySelector('img');
+      let isDragging=false, startX=0, startY=0, offsetX=0, offsetY=0, moved=false, lastX=0, lastY=0, lastTime=0, vx=0, vy=0;
+      const isTouchDevice = ('ontouchstart' in window)||navigator.maxTouchPoints>0;
 
       function onPointerDown(e){
-        e.preventDefault(); img.setPointerCapture(e.pointerId); isDragging=true; moved=false;
+        e.preventDefault(); img.setPointerCapture(e.pointerId);
+        isDragging=true; moved=false;
         startX=e.clientX; startY=e.clientY;
-        offsetX=e.clientX-icon.getBoundingClientRect().left;
-        offsetY=e.clientY-icon.getBoundingClientRect().top;
+        offsetX=e.clientX - icon.getBoundingClientRect().left;
+        offsetY=e.clientY - icon.getBoundingClientRect().top;
         lastX=e.clientX; lastY=e.clientY; lastTime=performance.now();
-        topZ+=1; icon.style.zIndex=topZ; icon.style.cursor='grabbing';
+        topZ++; icon.style.zIndex = topZ; icon.style.cursor='grabbing';
       }
-      function onPointerMove(e){ if(!isDragging) return;
-        const now=performance.now(), dt=Math.max(16,now-lastTime);
+      function onPointerMove(e){
+        if(!isDragging) return;
+        const dx = e.clientX-startX, dy=e.clientY-startY;
+        if(Math.abs(dx)>3 || Math.abs(dy)>3) moved=true;
+        const now=performance.now(), dt=Math.max(16, now-lastTime);
         vx=(e.clientX-lastX)/dt; vy=(e.clientY-lastY)/dt;
         lastX=e.clientX; lastY=e.clientY; lastTime=now;
-        icon.style.left=(e.clientX-offsetX)+'px'; icon.style.top=(e.clientY-offsetY)+'px';
-        if(Math.abs(e.clientX-startX)>5 || Math.abs(e.clientY-startY)>5) moved=true;
+        icon.style.left = (e.clientX-offsetX)+'px';
+        icon.style.top = (e.clientY-offsetY)+'px';
       }
       function onPointerUp(e){
-        img.releasePointerCapture(e.pointerId); icon.style.cursor='grab'; isDragging=false;
-        if(!moved){ showLightbox(img.src,filename); return; }
-        if(isTouchDevice && (Math.abs(vx)>0.01||Math.abs(vy)>0.01)){
+        img.releasePointerCapture(e.pointerId);
+        icon.style.cursor='grab';
+        isDragging=false;
+        if(!moved){
+          showLightbox(img.src, filename);
+          return;
+        }
+        if(isTouchDevice && (Math.abs(vx)>0.01 || Math.abs(vy)>0.01)){
           let decay=0.92;
-          function step(){ let x=parseFloat(icon.style.left)||0, y=parseFloat(icon.style.top)||0;
+          function step(){
+            let x=parseFloat(icon.style.left)||0, y=parseFloat(icon.style.top)||0;
             vx*=decay; vy*=decay; x+=vx*16; y+=vy*16;
             x=Math.max(8,Math.min(window.innerWidth-icon.offsetWidth-8,x));
             y=Math.max(8,Math.min(window.innerHeight-icon.offsetHeight-8,y));
@@ -176,40 +185,43 @@
         }
       }
       function onPointerCancel(e){ if(isDragging){ img.releasePointerCapture(e.pointerId); isDragging=false; icon.style.cursor='grab'; } }
-      icon.addEventListener('click',()=>showLightbox(img.src,filename));
+
       icon.addEventListener('pointerdown',onPointerDown);
       icon.addEventListener('pointermove',onPointerMove);
       icon.addEventListener('pointerup',onPointerUp);
       icon.addEventListener('pointercancel',onPointerCancel);
+
+      icon.addEventListener('click', ()=>{ if(!isDragging){ showLightbox(img.src, filename); } });
     }
 
-    function showLightbox(src,filename){
-      lightboxImg.src=src; lightboxCaption.textContent=filename.replace(/\.[^/.]+$/,'');
-      lightbox.classList.add('visible'); lightbox.setAttribute('aria-hidden','false');
+    function showLightbox(src, filename){
+      lightboxImg.src=src;
+      lightboxCaption.textContent=filename.replace(/\.[^/.]+$/,'');
+      lightbox.classList.add('visible');
+      lightbox.setAttribute('aria-hidden','false');
     }
-    lightbox.addEventListener('click',()=>{ lightbox.classList.remove('visible'); lightbox.setAttribute('aria-hidden','true'); });
+    lightbox.addEventListener('click', ()=>{ lightbox.classList.remove('visible'); lightbox.setAttribute('aria-hidden','true'); });
 
     themeToggle.addEventListener('click', ()=>{
-      if(document.body.classList.contains('light')){
-        document.body.classList.remove('light'); document.body.classList.add('dark'); themeToggle.textContent='Day';
-      } else { document.body.classList.remove('dark'); document.body.classList.add('light'); themeToggle.textContent='Night'; }
+      if(document.body.classList.contains('light')){ document.body.classList.replace('light','dark'); themeToggle.textContent='Day'; }
+      else { document.body.classList.replace('dark','light'); themeToggle.textContent='Night'; }
     });
 
-    enterBtn.addEventListener('click',()=>{ introOverlay.classList.add('hidden'); setTimeout(()=>{ introOverlay.style.display='none'; },700); });
+    enterBtn.addEventListener('click', ()=>{ introOverlay.classList.add('hidden'); setTimeout(()=>{ introOverlay.style.display='none'; },700); });
+    aboutBtn.addEventListener('click', ()=>{ aboutOverlay.classList.add('visible'); aboutOverlay.setAttribute('aria-hidden','false'); });
+    closeAbout.addEventListener('click', ()=>{ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); });
+    aboutOverlay.addEventListener('click', e=>{ if(e.target===aboutOverlay){ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); } });
 
-    aboutBtn.addEventListener('click',()=>{ aboutOverlay.classList.add('visible'); aboutOverlay.setAttribute('aria-hidden','false'); });
-    closeAbout.addEventListener('click',()=>{ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); });
-    aboutOverlay.addEventListener('click',(e)=>{ if(e.target===aboutOverlay){ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); } });
-
+    // Subtle constant motion
+    let driftAnim = null;
     function startDrift(){
       const icons=document.querySelectorAll('.icon');
-      const phaseOffsets=[];
-      icons.forEach((icon,i)=>{ phaseOffsets.push(Math.random()*Math.PI*2); });
       function drift(t){
         icons.forEach((icon,i)=>{
           const baseX=parseFloat(icon.style.left)||0, baseY=parseFloat(icon.style.top)||0;
-          const dx=Math.sin(t*0.001+phaseOffsets[i])*4;
-          const dy=Math.cos(t*0.0012+phaseOffsets[i])*2.5;
+          const amp=6, speed=0.0003+(i%7)*0.00005;
+          const dx=Math.sin((t*speed)+i)*amp;
+          const dy=Math.cos((t*speed*1.1)+i)*amp*0.6;
           icon.style.transform=`translate(${dx}px,${dy}px)`;
         });
         driftAnim=requestAnimationFrame(drift);
@@ -217,15 +229,19 @@
       driftAnim=requestAnimationFrame(drift);
     }
 
-    window.addEventListener('resize',()=>{
+    window.addEventListener('resize', ()=>{
       document.querySelectorAll('.icon').forEach(icon=>{
         const x=parseFloat(icon.style.left)||0, y=parseFloat(icon.style.top)||0;
-        const maxX=window.innerWidth-icon.offsetWidth-8, maxY=window.innerHeight-icon.offsetHeight-8;
-        if(x>maxX) icon.style.left=maxX+'px'; if(y>maxY) icon.style.top=maxY+'px';
+        const maxX=window.innerWidth-icon.offsetWidth-8;
+        const maxY=window.innerHeight-icon.offsetHeight-8;
+        if(x>maxX) icon.style.left=maxX+'px';
+        if(y>maxY) icon.style.top=maxY+'px';
       });
     });
 
-    window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ lightbox.classList.remove('visible'); aboutOverlay.classList.remove('visible'); introOverlay.classList.add('hidden'); } });
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){ lightbox.classList.remove('visible'); aboutOverlay.classList.remove('visible'); introOverlay.classList.add('hidden'); }
+    });
   </script>
 </body>
 </html>
