@@ -4,28 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>d0nt.blinkk</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
+    /* ====== Base Styles ====== */
     body {
       margin: 0;
       background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
       font-family: "IBM Plex Mono", monospace;
       overflow: hidden;
+      touch-action: none;
     }
 
     .desktop {
       position: relative;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
+      transition: all 0.4s ease;
     }
 
+    /* ====== Icon Styles ====== */
     .icon {
       position: absolute;
       width: 100px;
       text-align: center;
       cursor: grab;
       user-select: none;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .icon img {
@@ -34,11 +38,12 @@
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       object-fit: cover;
-      transition: transform 0.2s ease;
+      will-change: transform;
     }
 
     .icon img:hover {
       transform: scale(1.05);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
     }
 
     .icon span {
@@ -46,6 +51,7 @@
       font-size: 12px;
       margin-top: 6px;
       color: #333;
+      word-break: break-word;
     }
 
     @media (max-width: 768px) {
@@ -54,9 +60,12 @@
         width: 80px;
         height: 80px;
       }
+      .icon span {
+        font-size: 10px;
+      }
     }
 
-    /* Lightbox styles */
+    /* ====== Lightbox ====== */
     .lightbox {
       display: none;
       position: fixed;
@@ -79,11 +88,6 @@
       transition: transform 0.3s ease;
     }
 
-    .lightbox:active,
-    .lightbox img:active {
-      transform: scale(0.98);
-    }
-
     .lightbox.visible {
       display: flex;
       animation: fadeIn 0.3s ease;
@@ -93,102 +97,216 @@
       from { opacity: 0; }
       to { opacity: 1; }
     }
+
+    /* ====== Intro Overlay ====== */
+    #intro-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      color: white;
+      font-size: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      opacity: 1;
+      transition: opacity 0.8s ease;
+      text-align: center;
+    }
+
+    #intro-overlay h1 {
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+    }
+
+    #enter-btn {
+      border: 1px solid #fff;
+      padding: 8px 16px;
+      background: transparent;
+      color: #fff;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    #enter-btn:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    #intro-overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ====== Contact Info ====== */
+    .contact-info {
+      position: fixed;
+      bottom: 12px;
+      left: 16px;
+      font-size: 12px;
+      color: rgba(0, 0, 0, 0.6);
+      z-index: 1500;
+      user-select: none;
+    }
+
+    /* ====== View Toggle ====== */
+    .view-toggle {
+      position: fixed;
+      top: 12px;
+      right: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.3s ease;
+      z-index: 1500;
+    }
+
+    .view-toggle:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* ====== List View ====== */
+    .list-view {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 24px;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .list-view .icon {
+      position: static;
+      transform: none !important;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <div class="desktop" id="imageContainer"></div>
+  <!-- Intro Overlay -->
+  <div id="intro-overlay">
+    <h1>d0nt.blinkk</h1>
+    <p>drag the icons, explore the works</p>
+    <button id="enter-btn">enter</button>
+  </div>
 
-  <!-- Lightbox overlay -->
+  <!-- Contact Info -->
+  <div class="contact-info">© 2025 d0nt.blinkk · hello@d0ntblinkk.online</div>
+
+  <!-- Toggle Button -->
+  <button class="view-toggle" id="toggleView">List View</button>
+
+  <!-- Desktop -->
+  <div class="desktop" id="icons-container"></div>
+
+  <!-- Lightbox -->
   <div class="lightbox" id="lightbox">
-    <img src="" alt="Preview" id="lightboxImage" />
+    <img src="" alt="Preview" id="lightbox-img" />
   </div>
 
   <script>
-    // Fetch image filenames from images.json
-    fetch("images.json")
-      .then((response) => response.json())
-      .then((images) => {
-        const container = document.getElementById("imageContainer");
+    let topZ = 100; // track topmost z-index
+    let isListView = false;
 
-        images.forEach((imgName) => {
-          const icon = document.createElement("div");
-          icon.classList.add("icon");
-          icon.setAttribute("draggable", "true");
-
-          // Random starting positions
-          const left = 50 + Math.random() * (window.innerWidth - 150);
-          const top = 80 + Math.random() * (window.innerHeight - 180);
-          icon.style.left = `${left}px`;
-          icon.style.top = `${top}px`;
-
-          icon.innerHTML = `
-            <img src="images/${imgName}" alt="${imgName}">
-            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
-          `;
-          container.appendChild(icon);
-        });
-
-        enableDragging();
-        enableLightbox();
-      })
-      .catch((error) => console.error("Error loading images:", error));
-
-    // Enable drag functionality
-    function enableDragging() {
-      document.querySelectorAll(".icon").forEach((icon) => {
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        icon.addEventListener("mousedown", startDrag);
-        icon.addEventListener("touchstart", startDrag);
-
-        function startDrag(e) {
-          isDragging = true;
-          icon.style.cursor = "grabbing";
-          const event = e.touches ? e.touches[0] : e;
-          offsetX = event.clientX - icon.offsetLeft;
-          offsetY = event.clientY - icon.offsetTop;
-
-          document.addEventListener("mousemove", drag);
-          document.addEventListener("touchmove", drag);
-          document.addEventListener("mouseup", endDrag);
-          document.addEventListener("touchend", endDrag);
-        }
-
-        function drag(e) {
-          if (!isDragging) return;
-          const event = e.touches ? e.touches[0] : e;
-          icon.style.left = event.clientX - offsetX + "px";
-          icon.style.top = event.clientY - offsetY + "px";
-        }
-
-        function endDrag() {
-          isDragging = false;
-          icon.style.cursor = "grab";
-          document.removeEventListener("mousemove", drag);
-          document.removeEventListener("touchmove", drag);
-          document.removeEventListener("mouseup", endDrag);
-          document.removeEventListener("touchend", endDrag);
-        }
-      });
-    }
-
-    // Enable lightbox functionality
-    function enableLightbox() {
+    document.addEventListener("DOMContentLoaded", () => {
+      const iconsContainer = document.getElementById("icons-container");
       const lightbox = document.getElementById("lightbox");
-      const lightboxImage = document.getElementById("lightboxImage");
+      const lightboxImg = document.getElementById("lightbox-img");
+      const toggleView = document.getElementById("toggleView");
+      const introOverlay = document.getElementById("intro-overlay");
+      const enterBtn = document.getElementById("enter-btn");
 
-      document.querySelectorAll(".icon img").forEach((img) => {
-        img.addEventListener("click", () => {
-          lightboxImage.src = img.src;
-          lightbox.classList.add("visible");
-        });
-      });
+      // Load images
+      fetch("images.json")
+        .then((response) => response.json())
+        .then((images) => {
+          images.forEach((src) => {
+            const icon = document.createElement("div");
+            icon.className = "icon";
+            icon.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+            icon.style.top = `${Math.random() * (window.innerHeight - 150)}px`;
+            icon.innerHTML = `
+              <img src="images/${src}" alt="${src}">
+              <span>${src.replace(/\.[^/.]+$/, "")}</span>
+            `;
+            iconsContainer.appendChild(icon);
 
+            const img = icon.querySelector("img");
+            let isDragging = false;
+            let offsetX, offsetY, startX, startY;
+            let moved = false;
+
+            img.addEventListener("pointerdown", (e) => {
+              e.preventDefault();
+              img.setPointerCapture(e.pointerId);
+              isDragging = true;
+              moved = false;
+              startX = e.clientX;
+              startY = e.clientY;
+              offsetX = e.clientX - icon.getBoundingClientRect().left;
+              offsetY = e.clientY - icon.getBoundingClientRect().top;
+              
+              topZ += 1;
+              icon.style.zIndex = topZ;
+              icon.style.cursor = "grabbing";
+            });
+
+            img.addEventListener("pointermove", (e) => {
+              if (!isDragging || isListView) return;
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+              icon.style.left = e.clientX - offsetX + "px";
+              icon.style.top = e.clientY - offsetY + "px";
+            });
+
+            img.addEventListener("pointerup", (e) => {
+              img.releasePointerCapture(e.pointerId);
+              icon.style.cursor = "grab";
+              isDragging = false;
+              if (!moved && !isListView) {
+                lightboxImg.src = img.src;
+                lightbox.classList.add("visible");
+              }
+            });
+          });
+        })
+        .catch((err) => console.error("Error loading images:", err));
+
+      // Lightbox close
       lightbox.addEventListener("click", () => {
         lightbox.classList.remove("visible");
       });
-    }
+
+      // Toggle List / Icons View
+      toggleView.addEventListener("click", () => {
+        isListView = !isListView;
+        if (isListView) {
+          iconsContainer.classList.add("list-view");
+          toggleView.textContent = "Icons View";
+        } else {
+          iconsContainer.classList.remove("list-view");
+          toggleView.textContent = "List View";
+        }
+      });
+
+      // Enter Experience
+      enterBtn.addEventListener("click", () => {
+        introOverlay.classList.add("fade-out");
+        setTimeout(() => {
+          introOverlay.style.display = "none";
+        }, 800);
+      });
+    });
   </script>
 </body>
 </html>
