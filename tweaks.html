@@ -1,332 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>d0nt.blinkk</title>
-  <link rel="stylesheet" href="style.css" />
   <style>
-    body {
-      margin: 0;
-      background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
-      font-family: "IBM Plex Mono", monospace;
-      overflow: hidden;
-      transition: background 0.6s ease;
+    :root{
+      --bg-light: linear-gradient(180deg,#d9e0e7 0%,#cdd5df 100%);
+      --bg-dark: linear-gradient(180deg,#0f1220 0%,#1b2030 100%);
+      --accent: rgba(255,255,255,0.9);
+      --ease: cubic-bezier(.25,.1,.25,1);
+    }
+    html,body{height:100%;margin:0;font-family:"IBM Plex Mono",monospace;overflow:hidden;touch-action:none}
+    body.light{background:var(--bg-light);color:#000}
+    body.dark{background:var(--bg-dark);color:#f3f4f8}
+
+    /* Desktop canvas */
+    .desktop{position:relative;width:100vw;height:100vh;overflow:hidden;transition:background .45s var(--ease)}
+    /* icon (container) */
+    .icon{
+      position:absolute;
+      width:100px;
+      text-align:center;
+      user-select:none;
+      cursor:grab;
+      transition:transform .18s var(--ease),box-shadow .18s var(--ease);
+      -webkit-tap-highlight-color: transparent;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+    .icon img{
+      width:100px;height:100px;border-radius:12px;object-fit:cover;
+      box-shadow:0 4px 12px rgba(0,0,0,.18);
+      will-change:left,top,transform;
+      transition:transform .18s var(--ease),box-shadow .18s var(--ease);
+      display:block;
+    }
+    .icon span{font-size:12px;color:inherit;max-width:110px;word-break:break-word}
+    .icon:hover img{transform:scale(1.05);box-shadow:0 8px 22px rgba(0,0,0,.22)}
+
+    @media (max-width:768px){
+      .icon,.icon img{width:80px;height:80px}
+      .icon span{font-size:10px}
     }
 
-    body.night {
-      background: linear-gradient(180deg, #0a0a0f 0%, #1c1f26 100%);
-    }
+    /* lightbox */
+    .lightbox{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+    .lightbox.visible{display:flex}
+    .lightbox-card{max-width:92%;max-height:92%;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center}
+    .lightbox-card img{max-width:100%;max-height:80vh;border-radius:10px;display:block}
+    .lightbox-caption{padding:10px 14px;font-size:13px;color:var(--accent);background:rgba(0,0,0,.12);width:100%;text-align:center}
 
-    .desktop {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-    }
+    /* intro overlay */
+    #intro-overlay{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s var(--ease)}
+    #intro-overlay.hidden{opacity:0;pointer-events:none;display:block}
+    #intro-overlay h1{margin:0;font-size:1.6rem;letter-spacing:1px}
+    #intro-overlay p{margin:10px 0 18px;opacity:.92}
+    #enter-btn{border:1px solid #fff;padding:8px 14px;background:transparent;color:#fff;cursor:pointer;border-radius:8px;font-family:inherit}
+    #enter-btn:hover{background:#fff;color:#000}
 
-    .icon {
-      position: absolute;
-      width: 100px;
-      text-align: center;
-      cursor: grab;
-      user-select: none;
-      transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
+    /* contact footer */
+    .contact-info{position:fixed;left:16px;bottom:12px;font-size:12px;color:rgba(0,0,0,.6);z-index:2000}
+    body.dark .contact-info{color:rgba(255,255,255,.65)}
+    .contact-info a{color:inherit;text-decoration:none;font-weight:600}
 
-    .icon img {
-      width: 100px;
-      height: 100px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      object-fit: cover;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+    /* top-controls */
+    .controls{position:fixed;top:12px;right:16px;display:flex;gap:8px;z-index:2000}
+    .controls button{background:rgba(255,255,255,.85);border:0;padding:6px 10px;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .2s var(--ease)}
+    body.dark .controls button{background:rgba(20,20,30,.9);color:#fff}
+    .controls button:hover{transform:translateY(-2px)}
 
-    .icon:hover img {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
+    /* about button top-left */
+    .about-btn{position:fixed;top:12px;left:16px;z-index:2000;background:rgba(255,255,255,.8);border-radius:8px;padding:6px 9px;border:0;cursor:pointer}
+    body.dark .about-btn{background:rgba(20,20,30,.9);color:#fff}
 
-    .icon span {
-      display: block;
-      font-size: 12px;
-      margin-top: 6px;
-      color: #333;
-    }
+    /* about overlay */
+    .about-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:3500}
+    .about-overlay.visible{display:flex}
+    .about-card{max-width:680px;background:var(--accent);color:#000;padding:22px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    body.dark .about-card{background:linear-gradient(180deg,#14161b,#20232b);color:#fff}
 
-    body.night .icon span {
-      color: #ddd;
-    }
+    /* list / launchpad view */
+    .list-view{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:22px;align-content:center;justify-items:center;padding:28px;box-sizing:border-box;height:100vh;overflow:auto}
+    .list-view .icon{position:relative;transform:none;cursor:pointer;transition:transform .18s var(--ease),box-shadow .18s var(--ease)}
+    .list-view .icon img{border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.14)}
+    .list-view .icon:hover{transform:translateY(-8px) scale(1.03);box-shadow:0 18px 44px rgba(0,0,0,.22)}
 
-    @media (max-width: 768px) {
-      .icon,
-      .icon img {
-        width: 80px;
-        height: 80px;
-      }
-    }
+    /* subtle idle indicator */
+    .idle .contact-info{opacity:.7}
 
-    /* Overlay buttons */
-    .control-btn {
-      position: fixed;
-      z-index: 1500;
-      background: rgba(255, 255, 255, 0.7);
-      border: none;
-      border-radius: 50%;
-      padding: 10px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      transition: background 0.3s ease;
-    }
-
-    .control-btn:hover {
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    #enterBtn {
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-weight: 600;
-      border-radius: 12px;
-      padding: 8px 16px;
-    }
-
-    #aboutBtn {
-      top: 20px;
-      right: 20px;
-    }
-
-    #themeToggle {
-      top: 20px;
-      left: 20px;
-    }
-
-    /* Lightbox */
-    .lightbox {
-      display: none;
-      position: fixed;
-      z-index: 1200;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(8px);
-    }
-
-    .lightbox img {
-      max-width: 90%;
-      max-height: 90%;
-      border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-    }
-
-    .lightbox span {
-      position: absolute;
-      bottom: 40px;
-      color: white;
-      font-size: 14px;
-      opacity: 0.8;
-    }
-
-    .lightbox.visible {
-      display: flex;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* About overlay */
-    #aboutOverlay {
-      display: none;
-      position: fixed;
-      z-index: 1600;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 40px;
-      backdrop-filter: blur(10px);
-    }
-
-    #aboutOverlay.visible {
-      display: flex;
-      animation: fadeIn 0.4s ease;
-    }
-
-    #aboutOverlay p {
-      font-size: 16px;
-      max-width: 600px;
-      line-height: 1.6;
-    }
-
-    /* Footer */
-    footer {
-      position: fixed;
-      bottom: 10px;
-      right: 20px;
-      font-size: 12px;
-      color: #444;
-    }
-
-    body.night footer {
-      color: #ccc;
-    }
-
-    footer a {
-      color: inherit;
-      text-decoration: none;
-      font-weight: 500;
-    }
+    /* small utility */
+    .hidden{display:none!important}
   </style>
 </head>
-<body>
-  <div class="desktop" id="imageContainer"></div>
-
-  <!-- Controls -->
-  <button id="themeToggle" class="control-btn">☀️</button>
-  <button id="aboutBtn" class="control-btn">?</button>
-  <button id="enterBtn" class="control-btn">Enter</button>
-
-  <!-- About Overlay -->
-  <div id="aboutOverlay">
-    <p>d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate.</p>
+<body class="light">
+  <!-- Intro overlay -->
+  <div id="intro-overlay" role="dialog" aria-modal="true">
+    <h1>d0nt.blinkk</h1>
+    <p>drag the icons, explore the works</p>
+    <button id="enter-btn">enter</button>
   </div>
 
-  <!-- Lightbox -->
-  <div class="lightbox" id="lightbox">
-    <img src="" alt="Preview" id="lightboxImage" />
-    <span id="lightboxCaption"></span>
+  <!-- About -->
+  <button class="about-btn" id="aboutBtn">?</button>
+  <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
+    <div class="about-card">
+      <h3>about</h3>
+      <p style="margin-top:8px">
+        d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate (I will obviously tweak it more).
+      </p>
+      <p style="margin-top:12px;font-size:13px;color:rgba(0,0,0,.7)">Contact: <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">instagram.com/d0nt.blinkk</a></p>
+      <div style="text-align:right;margin-top:12px">
+        <button id="closeAbout" style="padding:6px 10px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer">close</button>
+      </div>
+    </div>
   </div>
 
-  <footer>© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank">d0nt.blinkk</a></footer>
+  <!-- top controls -->
+  <div class="controls" role="toolbar">
+    <button id="toggleView">List View</button>
+    <button id="themeToggle">Night</button>
+  </div>
+
+  <!-- contact footer -->
+  <div class="contact-info">© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">d0nt.blinkk</a></div>
+
+  <!-- main desktop canvas -->
+  <div class="desktop" id="desktop"></div>
+
+  <!-- lightbox -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightbox-card">
+      <img id="lightboxImg" src="" alt="preview" />
+      <div class="lightbox-caption" id="lightboxCaption"></div>
+    </div>
+  </div>
 
   <script>
-    // Load images
-    fetch("images.json")
-      .then((response) => response.json())
-      .then((images) => {
-        const container = document.getElementById("imageContainer");
-        images.forEach((imgName) => {
-          const icon = document.createElement("div");
-          icon.classList.add("icon");
-          icon.setAttribute("draggable", "true");
+    // globals
+    let topZ = 100;
+    let isListView = false;
+    let idleTimer = null;
+    let isIdle = false;
+    let driftAnim = null;
+    const IDLE_TIMEOUT = 20000; // 20s
 
-          // random position
-          const left = 50 + Math.random() * (window.innerWidth - 150);
-          const top = 80 + Math.random() * (window.innerHeight - 180);
-          icon.style.left = `${left}px`;
-          icon.style.top = `${top}px`;
+    const desktop = document.getElementById('desktop');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    const toggleViewBtn = document.getElementById('toggleView');
+    const themeToggle = document.getElementById('themeToggle');
+    const introOverlay = document.getElementById('intro-overlay');
+    const enterBtn = document.getElementById('enter-btn');
+    const aboutBtn = document.getElementById('aboutBtn');
+    const aboutOverlay = document.getElementById('aboutOverlay');
+    const closeAbout = document.getElementById('closeAbout');
 
-          icon.innerHTML = `
-            <img src="images/${imgName}" alt="${imgName}">
-            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
-          `;
-          container.appendChild(icon);
-        });
-
-        enableDragging();
-        enableLightbox();
-      });
-
-    // Drag logic
-    function enableDragging() {
-      let highestZ = 10;
-      document.querySelectorAll(".icon").forEach((icon) => {
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        icon.addEventListener("mousedown", startDrag);
-        icon.addEventListener("touchstart", startDrag, { passive: true });
-
-        function startDrag(e) {
-          isDragging = true;
-          icon.style.cursor = "grabbing";
-          icon.style.zIndex = ++highestZ;
-          const event = e.touches ? e.touches[0] : e;
-          offsetX = event.clientX - icon.offsetLeft;
-          offsetY = event.clientY - icon.offsetTop;
-
-          document.addEventListener("mousemove", drag);
-          document.addEventListener("touchmove", drag, { passive: false });
-          document.addEventListener("mouseup", endDrag);
-          document.addEventListener("touchend", endDrag);
-        }
-
-        function drag(e) {
-          if (!isDragging) return;
-          const event = e.touches ? e.touches[0] : e;
-          icon.style.left = event.clientX - offsetX + "px";
-          icon.style.top = event.clientY - offsetY + "px";
-        }
-
-        function endDrag() {
-          isDragging = false;
-          icon.style.cursor = "grab";
-          document.removeEventListener("mousemove", drag);
-          document.removeEventListener("touchmove", drag);
-          document.removeEventListener("mouseup", endDrag);
-          document.removeEventListener("touchend", endDrag);
-        }
-      });
+    // utility
+    function resetIdleTimer(){
+      isIdle = false;
+      document.body.classList.remove('idle');
+      if (driftAnim){ cancelAnimationFrame(driftAnim); driftAnim=null; }
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(()=>{ isIdle = true; document.body.classList.add('idle'); startDrift(); }, IDLE_TIMEOUT);
     }
 
-    // Lightbox
-    function enableLightbox() {
-      const lightbox = document.getElementById("lightbox");
-      const lightboxImage = document.getElementById("lightboxImage");
-      const lightboxCaption = document.getElementById("lightboxCaption");
-
-      document.querySelectorAll(".icon img").forEach((img) => {
-        img.addEventListener("click", () => {
-          lightboxImage.src = img.src;
-          lightboxCaption.textContent = img.alt.replace(/\.[^/.]+$/, "");
-          lightbox.classList.add("visible");
+    // create icons from images.json
+    fetch('images.json')
+      .then(r=>r.json())
+      .then(images=>{
+        images.forEach(name=>{
+          createIcon(name);
         });
+        resetIdleTimer();
+      })
+      .catch(err=>{ console.error('images.json load error',err); });
+
+    function createIcon(filename){
+      const icon = document.createElement('div');
+      icon.className = 'icon';
+      // random initial placement (leave some margins)
+      const left = 40 + Math.random() * (window.innerWidth - 200);
+      const top = 60 + Math.random() * (window.innerHeight - 220);
+      icon.style.left = `${left}px`;
+      icon.style.top = `${top}px`;
+      icon.innerHTML = `<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
+      desktop.appendChild(icon);
+
+      // pointer drag + click handling
+      const img = icon.querySelector('img');
+      let isDragging=false, startX=0, startY=0, offsetX=0, offsetY=0, moved=false, lastX=0, lastY=0, lastTime=0, vx=0, vy=0;
+      const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
+
+      function onPointerDown(e){
+        if(isListView) return; // don't drag in list mode
+        e.preventDefault();
+        resetIdleTimer();
+        img.setPointerCapture(e.pointerId);
+        isDragging=true; moved=false;
+        startX = e.clientX; startY = e.clientY;
+        offsetX = e.clientX - icon.getBoundingClientRect().left;
+        offsetY = e.clientY - icon.getBoundingClientRect().top;
+        lastX = e.clientX; lastY = e.clientY; lastTime = performance.now();
+        // bring to front
+        topZ += 1; icon.style.zIndex = topZ;
+        icon.style.cursor = 'grabbing';
+      }
+
+      function onPointerMove(e){
+        if(!isDragging) return;
+        const dx = e.clientX - startX, dy = e.clientY - startY;
+        if(Math.abs(dx)>5 || Math.abs(dy)>5) moved=true;
+        // update velocity
+        const now = performance.now();
+        const dt = Math.max(16, now - lastTime);
+        vx = (e.clientX - lastX)/dt; vy = (e.clientY - lastY)/dt;
+        lastX = e.clientX; lastY = e.clientY; lastTime = now;
+        icon.style.left = (e.clientX - offsetX) + 'px';
+        icon.style.top = (e.clientY - offsetY) + 'px';
+      }
+
+      function onPointerUp(e){
+        img.releasePointerCapture(e.pointerId);
+        icon.style.cursor = 'grab';
+        isDragging=false;
+        resetIdleTimer();
+
+        if(!moved){
+          // open lightbox (works in both views)
+          showLightbox(img.src, filename);
+          return;
+        }
+
+        // small momentum for touch devices only
+        if(isTouchDevice && (Math.abs(vx)>0.01 || Math.abs(vy)>0.01)){
+          let decay = 0.92;
+          function step(){
+            let x = parseFloat(icon.style.left) || 0;
+            let y = parseFloat(icon.style.top) || 0;
+            vx *= decay; vy *= decay;
+            x += vx*16; y += vy*16;
+            // clamp to viewport
+            const maxX = window.innerWidth - icon.offsetWidth - 8;
+            const maxY = window.innerHeight - icon.offsetHeight - 8;
+            x = Math.max(8, Math.min(maxX, x));
+            y = Math.max(8, Math.min(maxY, y));
+            icon.style.left = x+'px'; icon.style.top = y+'px';
+            if(Math.abs(vx)>0.05 || Math.abs(vy)>0.05) requestAnimationFrame(step);
+          }
+          requestAnimationFrame(step);
+        }
+      }
+
+      // pointercancel fallback
+      function onPointerCancel(e){
+        if(isDragging){
+          img.releasePointerCapture(e.pointerId);
+          isDragging=false;
+          icon.style.cursor='grab';
+        }
+      }
+
+      // In list view, clicking the icon should open lightbox (no drag)
+      icon.addEventListener('click', (e)=>{
+        if(isListView) {
+          const imgEl = icon.querySelector('img');
+          showLightbox(imgEl.src, filename);
+        }
       });
 
-      lightbox.addEventListener("click", () => {
-        lightbox.classList.remove("visible");
-      });
+      icon.addEventListener('pointerdown', onPointerDown);
+      icon.addEventListener('pointermove', onPointerMove);
+      icon.addEventListener('pointerup', onPointerUp);
+      icon.addEventListener('pointercancel', onPointerCancel);
     }
 
-    // About Overlay
-    const aboutBtn = document.getElementById("aboutBtn");
-    const aboutOverlay = document.getElementById("aboutOverlay");
-    aboutBtn.addEventListener("click", () => {
-      aboutOverlay.classList.toggle("visible");
-    });
-    aboutOverlay.addEventListener("click", () => {
-      aboutOverlay.classList.remove("visible");
+    // Lightbox display
+    function showLightbox(src, filename){
+      lightboxImg.src = src;
+      lightboxCaption.textContent = filename.replace(/\.[^/.]+$/,'');
+      lightbox.classList.add('visible');
+      lightbox.setAttribute('aria-hidden','false');
+      resetIdleTimer();
+    }
+    lightbox.addEventListener('click', ()=>{ lightbox.classList.remove('visible'); lightbox.setAttribute('aria-hidden','true'); resetIdleTimer(); });
+
+    // View toggle
+    toggleViewBtn.addEventListener('click', ()=>{
+      isListView = !isListView;
+      if(isListView){
+        desktop.classList.add('list-view');
+        toggleViewBtn.textContent = 'Icons View';
+        // apply grid by adding class; remove absolute positioning so icons stack in grid
+      } else {
+        desktop.classList.remove('list-view');
+        toggleViewBtn.textContent = 'List View';
+      }
+      resetIdleTimer();
     });
 
-    // Theme toggle
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("night");
-      themeToggle.textContent = document.body.classList.contains("night") ? "🌙" : "☀️";
+    // theme toggle (day/night)
+    themeToggle.addEventListener('click', ()=>{
+      if(document.body.classList.contains('light')){
+        document.body.classList.remove('light'); document.body.classList.add('dark');
+        themeToggle.textContent = 'Day';
+      } else {
+        document.body.classList.remove('dark'); document.body.classList.add('light');
+        themeToggle.textContent = 'Night';
+      }
+      resetIdleTimer();
     });
 
-    // Enter overlay fade-out (intro)
-    const enterBtn = document.getElementById("enterBtn");
-    enterBtn.addEventListener("click", () => {
-      enterBtn.style.opacity = 0;
-      setTimeout(() => enterBtn.style.display = "none", 400);
+    // Intro enter
+    enterBtn.addEventListener('click', ()=>{
+      introOverlay.classList.add('hidden');
+      setTimeout(()=>{ introOverlay.style.display='none'; },700);
+      resetIdleTimer();
     });
+
+    // About overlay
+    aboutBtn.addEventListener('click', ()=>{ aboutOverlay.classList.add('visible'); aboutOverlay.setAttribute('aria-hidden','false'); resetIdleTimer(); });
+    closeAbout.addEventListener('click', ()=>{ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); resetIdleTimer(); });
+    aboutOverlay.addEventListener('click', (e)=>{ if(e.target===aboutOverlay){ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); } });
+
+    // Idle drift: small slow floating for all icons (low-cost)
+    function startDrift(){
+      const icons = document.querySelectorAll('.icon');
+      const start = performance.now();
+      function drift(t){
+        icons.forEach((icon,i)=>{
+          // small per-icon offsets derived from time + index (very subtle)
+          const baseX = parseFloat(icon.style.left) || 0;
+          const baseY = parseFloat(icon.style.top) || 0;
+          const amp = 6; // pixel amplitude
+          const speed = 0.0003 + (i%7)*0.00005;
+          const dx = Math.sin((t*speed)+(i))*amp;
+          const dy = Math.cos((t*speed*1.1)+(i))*amp*0.6;
+          icon.style.transform = `translate(${dx}px,${dy}px)`;
+        });
+        driftAnim = requestAnimationFrame(drift);
+      }
+      driftAnim = requestAnimationFrame(drift);
+    }
+
+    // stop drift on interaction
+    ['pointerdown','pointermove','click','wheel','touchstart'].forEach(evt=>{
+      window.addEventListener(evt, ()=>{ // clear transforms on active interaction
+        const icons = document.querySelectorAll('.icon');
+        icons.forEach(icon=>icon.style.transform='none');
+        resetIdleTimer();
+      }, {passive:true});
+    });
+
+    // handle window resize (keep icons inside bounds)
+    window.addEventListener('resize', ()=>{
+      document.querySelectorAll('.icon').forEach(icon=>{
+        const x = parseFloat(icon.style.left)||0;
+        const y = parseFloat(icon.style.top)||0;
+        const maxX = window.innerWidth - icon.offsetWidth - 8;
+        const maxY = window.innerHeight - icon.offsetHeight - 8;
+        if(x>maxX) icon.style.left = maxX+'px';
+        if(y>maxY) icon.style.top = maxY+'px';
+      });
+    });
+
+    // initial theme
+    document.body.classList.add('light');
+
+    // Accessibility: keyboard escape to close lightbox/about
+    window.addEventListener('keydown', (e)=>{
+      if(e.key==='Escape'){ lightbox.classList.remove('visible'); aboutOverlay.classList.remove('visible'); introOverlay.classList.add('hidden'); }
+    });
+
+    // Start idle timer on load
+    resetIdleTimer();
   </script>
 </body>
 </html>
