@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>d0nt.blinkk</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
+      font-family: "IBM Plex Mono", monospace;
+      overflow: hidden;
+      transition: background 0.6s ease;
+    }
+
+    body.night {
+      background: linear-gradient(180deg, #0a0a0f 0%, #1c1f26 100%);
+    }
+
+    .desktop {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .icon {
+      position: absolute;
+      width: 100px;
+      text-align: center;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+
+    .icon img {
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      object-fit: cover;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .icon:hover img {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .icon span {
+      display: block;
+      font-size: 12px;
+      margin-top: 6px;
+      color: #333;
+    }
+
+    body.night .icon span {
+      color: #ddd;
+    }
+
+    @media (max-width: 768px) {
+      .icon,
+      .icon img {
+        width: 80px;
+        height: 80px;
+      }
+    }
+
+    /* Overlay buttons */
+    .control-btn {
+      position: fixed;
+      z-index: 1500;
+      background: rgba(255, 255, 255, 0.7);
+      border: none;
+      border-radius: 50%;
+      padding: 10px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.3s ease;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    #enterBtn {
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 600;
+      border-radius: 12px;
+      padding: 8px 16px;
+    }
+
+    #aboutBtn {
+      top: 20px;
+      right: 20px;
+    }
+
+    #themeToggle {
+      top: 20px;
+      left: 20px;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 1200;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox span {
+      position: absolute;
+      bottom: 40px;
+      color: white;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .lightbox.visible {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* About overlay */
+    #aboutOverlay {
+      display: none;
+      position: fixed;
+      z-index: 1600;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px;
+      backdrop-filter: blur(10px);
+    }
+
+    #aboutOverlay.visible {
+      display: flex;
+      animation: fadeIn 0.4s ease;
+    }
+
+    #aboutOverlay p {
+      font-size: 16px;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* Footer */
+    footer {
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+      font-size: 12px;
+      color: #444;
+    }
+
+    body.night footer {
+      color: #ccc;
+    }
+
+    footer a {
+      color: inherit;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="desktop" id="imageContainer"></div>
+
+  <!-- Controls -->
+  <button id="themeToggle" class="control-btn">☀️</button>
+  <button id="aboutBtn" class="control-btn">?</button>
+  <button id="enterBtn" class="control-btn">Enter</button>
+
+  <!-- About Overlay -->
+  <div id="aboutOverlay">
+    <p>d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate.</p>
+  </div>
+
+  <!-- Lightbox -->
+  <div class="lightbox" id="lightbox">
+    <img src="" alt="Preview" id="lightboxImage" />
+    <span id="lightboxCaption"></span>
+  </div>
+
+  <footer>© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank">d0nt.blinkk</a></footer>
+
+  <script>
+    // Load images
+    fetch("images.json")
+      .then((response) => response.json())
+      .then((images) => {
+        const container = document.getElementById("imageContainer");
+        images.forEach((imgName) => {
+          const icon = document.createElement("div");
+          icon.classList.add("icon");
+          icon.setAttribute("draggable", "true");
+
+          // random position
+          const left = 50 + Math.random() * (window.innerWidth - 150);
+          const top = 80 + Math.random() * (window.innerHeight - 180);
+          icon.style.left = `${left}px`;
+          icon.style.top = `${top}px`;
+
+          icon.innerHTML = `
+            <img src="images/${imgName}" alt="${imgName}">
+            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
+          `;
+          container.appendChild(icon);
+        });
+
+        enableDragging();
+        enableLightbox();
+      });
+
+    // Drag logic
+    function enableDragging() {
+      let highestZ = 10;
+      document.querySelectorAll(".icon").forEach((icon) => {
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        icon.addEventListener("mousedown", startDrag);
+        icon.addEventListener("touchstart", startDrag, { passive: true });
+
+        function startDrag(e) {
+          isDragging = true;
+          icon.style.cursor = "grabbing";
+          icon.style.zIndex = ++highestZ;
+          const event = e.touches ? e.touches[0] : e;
+          offsetX = event.clientX - icon.offsetLeft;
+          offsetY = event.clientY - icon.offsetTop;
+
+          document.addEventListener("mousemove", drag);
+          document.addEventListener("touchmove", drag, { passive: false });
+          document.addEventListener("mouseup", endDrag);
+          document.addEventListener("touchend", endDrag);
+        }
+
+        function drag(e) {
+          if (!isDragging) return;
+          const event = e.touches ? e.touches[0] : e;
+          icon.style.left = event.clientX - offsetX + "px";
+          icon.style.top = event.clientY - offsetY + "px";
+        }
+
+        function endDrag() {
+          isDragging = false;
+          icon.style.cursor = "grab";
+          document.removeEventListener("mousemove", drag);
+          document.removeEventListener("touchmove", drag);
+          document.removeEventListener("mouseup", endDrag);
+          document.removeEventListener("touchend", endDrag);
+        }
+      });
+    }
+
+    // Lightbox
+    function enableLightbox() {
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImage = document.getElementById("lightboxImage");
+      const lightboxCaption = document.getElementById("lightboxCaption");
+
+      document.querySelectorAll(".icon img").forEach((img) => {
+        img.addEventListener("click", () => {
+          lightboxImage.src = img.src;
+          lightboxCaption.textContent = img.alt.replace(/\.[^/.]+$/, "");
+          lightbox.classList.add("visible");
+        });
+      });
+
+      lightbox.addEventListener("click", () => {
+        lightbox.classList.remove("visible");
+      });
+    }
+
+    // About Overlay
+    const aboutBtn = document.getElementById("aboutBtn");
+    const aboutOverlay = document.getElementById("aboutOverlay");
+    aboutBtn.addEventListener("click", () => {
+      aboutOverlay.classList.toggle("visible");
+    });
+    aboutOverlay.addEventListener("click", () => {
+      aboutOverlay.classList.remove("visible");
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById("themeToggle");
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("night");
+      themeToggle.textContent = document.body.classList.contains("night") ? "🌙" : "☀️";
+    });
+
+    // Enter overlay fade-out (intro)
+    const enterBtn = document.getElementById("enterBtn");
+    enterBtn.addEventListener("click", () => {
+      enterBtn.style.opacity = 0;
+      setTimeout(() => enterBtn.style.display = "none", 400);
+    });
+  </script>
+</body>
+</html>
