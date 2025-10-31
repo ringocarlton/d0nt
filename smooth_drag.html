@@ -3,13 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>d0nt.blinkk — Smooth Drag Test</title>
+  <title>d0nt.blinkk</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       margin: 0;
       background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
       font-family: "IBM Plex Mono", monospace;
       overflow: hidden;
+      touch-action: none; /* Prevent iOS scrolling interference */
     }
 
     .desktop {
@@ -24,9 +26,8 @@
       text-align: center;
       cursor: grab;
       user-select: none;
-      transition: transform 0.1s ease-out;
-      touch-action: none;
-      will-change: transform;
+      touch-action: none; /* Needed for fluid pointer handling */
+      transition: transform 0.15s ease-out;
     }
 
     .icon img {
@@ -36,6 +37,7 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       object-fit: cover;
       transition: transform 0.2s ease;
+      will-change: transform;
     }
 
     .icon img:hover {
@@ -80,11 +82,6 @@
       transition: transform 0.3s ease;
     }
 
-    .lightbox:active,
-    .lightbox img:active {
-      transform: scale(0.98);
-    }
-
     .lightbox.visible {
       display: flex;
       animation: fadeIn 0.3s ease;
@@ -105,101 +102,108 @@
   </div>
 
   <script>
-    // Example test images (you can replace with your actual images)
-    const images = ["https://picsum.photos/200?random=1", "https://picsum.photos/200?random=2", "https://picsum.photos/200?random=3"];
+    // Fetch image filenames from images.json
+    fetch("images.json")
+      .then((response) => response.json())
+      .then((images) => {
+        const container = document.getElementById("imageContainer");
 
-    const container = document.getElementById("imageContainer");
+        images.forEach((imgName) => {
+          const icon = document.createElement("div");
+          icon.classList.add("icon");
 
-    images.forEach((imgSrc, i) => {
-      const icon = document.createElement("div");
-      icon.classList.add("icon");
-      const left = 80 + Math.random() * (window.innerWidth - 180);
-      const top = 100 + Math.random() * (window.innerHeight - 200);
-      icon.style.left = `${left}px`;
-      icon.style.top = `${top}px`;
+          const left = 50 + Math.random() * (window.innerWidth - 150);
+          const top = 80 + Math.random() * (window.innerHeight - 180);
+          icon.style.left = `${left}px`;
+          icon.style.top = `${top}px`;
 
-      icon.innerHTML = `
-        <img src="${imgSrc}" alt="Image ${i + 1}">
-        <span>Image ${i + 1}</span>
-      `;
-      container.appendChild(icon);
-    });
+          icon.innerHTML = `
+            <img src="images/${imgName}" alt="${imgName}">
+            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
+          `;
+          container.appendChild(icon);
+        });
 
-    enableDragging();
-    enableLightbox();
+        enableSmoothDragging();
+        enableLightbox();
+      })
+      .catch((error) => console.error("Error loading images:", error));
 
-    // Smooth, GPU-accelerated dragging
-    function enableDragging() {
-      document.querySelectorAll(".icon").forEach((icon) => {
-        let isDragging = false;
-        let offsetX = 0, offsetY = 0;
-        let pendingX = 0, pendingY = 0;
-        let rafId = null;
+    // Unified smooth drag (works on desktop & mobile)
+    function enableSmoothDragging() {
+      const icons = document.querySelectorAll(".icon");
+      let activeIcon = null;
+      let startX = 0, startY = 0;
+      let initialX = 0, initialY = 0;
+      let lastMoveTime = 0;
 
-        icon.addEventListener("mousedown", startDrag);
-        icon.addEventListener("touchstart", startDrag, { passive: false });
-
-        function startDrag(e) {
+      icons.forEach(icon => {
+        icon.addEventListener("pointerdown", (e) => {
           e.preventDefault();
-          isDragging = true;
+          activeIcon = icon;
+          icon.setPointerCapture(e.pointerId);
           icon.style.cursor = "grabbing";
 
-          const event = e.touches ? e.touches[0] : e;
-          const rect = icon.getBoundingClientRect();
-          offsetX = event.clientX - rect.left;
-          offsetY = event.clientY - rect.top;
+          startX = e.clientX;
+          startY = e.clientY;
+          initialX = parseFloat(icon.style.left);
+          initialY = parseFloat(icon.style.top);
+        });
 
-          pendingX = rect.left;
-          pendingY = rect.top;
+        icon.addEventListener("pointermove", (e) => {
+          if (!activeIcon || e.pointerId === undefined) return;
 
-          document.addEventListener("mousemove", drag);
-          document.addEventListener("touchmove", drag, { passive: false });
-          document.addEventListener("mouseup", endDrag);
-          document.addEventListener("touchend", endDrag);
-        }
+          const now = performance.now();
+          const dt = now - lastMoveTime;
 
-        function drag(e) {
-          if (!isDragging) return;
-          const event = e.touches ? e.touches[0] : e;
+          // Limit update frequency for smoothness
+          if (dt < 8) return;
+          lastMoveTime = now;
 
-          pendingX = event.clientX - offsetX;
-          pendingY = event.clientY - offsetY;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
 
-          if (!rafId) {
-            rafId = requestAnimationFrame(updatePosition);
-          }
-        }
+          activeIcon.style.transform = `translate(${dx}px, ${dy}px)`;
+        });
 
-        function updatePosition() {
-          rafId = null;
-          icon.style.transform = `translate(${pendingX}px, ${pendingY}px)`;
-        }
+        icon.addEventListener("pointerup", (e) => {
+          if (!activeIcon) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
 
-        function endDrag() {
-          if (!isDragging) return;
-          isDragging = false;
-          icon.style.cursor = "grab";
+          // Smoothly animate to final position
+          activeIcon.style.transition = "transform 0.15s ease-out";
+          requestAnimationFrame(() => {
+            activeIcon.style.left = initialX + dx + "px";
+            activeIcon.style.top = initialY + dy + "px";
+            activeIcon.style.transform = "translate(0,0)";
+          });
 
-          // Commit transform to absolute position
-          icon.style.left = pendingX + "px";
-          icon.style.top = pendingY + "px";
-          icon.style.transform = "none";
+          setTimeout(() => {
+            activeIcon.style.transition = "none";
+            activeIcon.style.cursor = "grab";
+            activeIcon = null;
+          }, 160);
+        });
 
-          document.removeEventListener("mousemove", drag);
-          document.removeEventListener("touchmove", drag);
-          document.removeEventListener("mouseup", endDrag);
-          document.removeEventListener("touchend", endDrag);
-        }
+        icon.addEventListener("pointercancel", () => {
+          if (!activeIcon) return;
+          activeIcon.style.transition = "none";
+          activeIcon.style.transform = "translate(0,0)";
+          activeIcon.style.cursor = "grab";
+          activeIcon = null;
+        });
       });
     }
 
-    // Lightbox preview
+    // Lightbox functionality
     function enableLightbox() {
       const lightbox = document.getElementById("lightbox");
       const lightboxImage = document.getElementById("lightboxImage");
 
       document.querySelectorAll(".icon img").forEach((img) => {
-        img.addEventListener("click", () => {
+        img.addEventListener("click", (e) => {
+          e.stopPropagation();
           lightboxImage.src = img.src;
           lightbox.classList.add("visible");
         });
