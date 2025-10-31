@@ -11,65 +11,61 @@
       background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
       font-family: "IBM Plex Mono", monospace;
       overflow: hidden;
-      touch-action: none;
+      touch-action: none; /* improves mobile drag */
     }
 
     .desktop {
       position: relative;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
     }
 
     .icon {
       position: absolute;
       width: 100px;
-      text-align: center;
-      cursor: grab;
-      user-select: none;
-      touch-action: none;
-      will-change: left, top;
-      transition: left 0.15s ease-out, top 0.15s ease-out;
-    }
-
-    .icon img {
-      width: 100px;
       height: 100px;
+      cursor: grab;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       object-fit: cover;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      user-select: none;
+      will-change: transform;
     }
 
-    .icon img:hover { transform: scale(1.05); }
-
-    .icon span {
-      display: block;
-      font-size: 12px;
-      margin-top: 6px;
-      color: #333;
+    .icon:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
     }
 
     @media (max-width: 768px) {
-      .icon,
-      .icon img { width: 80px; height: 80px; }
+      .icon {
+        width: 80px;
+        height: 80px;
+      }
     }
 
+    /* Lightbox */
     .lightbox {
       display: none;
       position: fixed;
       z-index: 1000;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.85);
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
       justify-content: center;
       align-items: center;
       backdrop-filter: blur(8px);
     }
 
     .lightbox img {
-      max-width: 90%; max-height: 90%;
+      max-width: 90%;
+      max-height: 90%;
       border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
       transition: transform 0.3s ease;
     }
 
@@ -79,117 +75,83 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; } to { opacity: 1; }
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <div class="desktop" id="imageContainer"></div>
+  <div class="desktop" id="icons-container"></div>
 
+  <!-- Lightbox -->
   <div class="lightbox" id="lightbox">
-    <img src="" alt="Preview" id="lightboxImage" />
+    <img src="" alt="Preview" id="lightbox-img" />
   </div>
 
   <script>
-    fetch("images.json")
-      .then(r => r.json())
-      .then(images => {
-        const container = document.getElementById("imageContainer");
-        images.forEach(name => {
-          const icon = document.createElement("div");
-          icon.classList.add("icon");
-          icon.innerHTML = `
-            <img src="images/${name}" alt="${name}">
-            <span>${name.replace(/\.[^/.]+$/, "")}</span>
-          `;
-          icon.style.left = `${50 + Math.random() * (window.innerWidth - 150)}px`;
-          icon.style.top = `${80 + Math.random() * (window.innerHeight - 180)}px`;
-          container.appendChild(icon);
-        });
-        enableFluidDragging();
-        enableLightbox();
-      });
-
-    function enableFluidDragging() {
-      const icons = document.querySelectorAll(".icon");
-      let active = null, startX, startY, offsetX, offsetY;
-      let lastX = 0, lastY = 0, lastTime = 0;
-      let velocityX = 0, velocityY = 0;
-      const isTouch = /Mobi|Android/i.test(navigator.userAgent);
-
-      icons.forEach(icon => {
-        icon.addEventListener("pointerdown", e => {
-          e.preventDefault();
-          active = icon;
-          icon.setPointerCapture(e.pointerId);
-          icon.style.cursor = "grabbing";
-          icon.style.transition = "none";
-          startX = e.clientX; startY = e.clientY;
-          offsetX = parseFloat(icon.style.left);
-          offsetY = parseFloat(icon.style.top);
-          lastX = e.clientX; lastY = e.clientY; lastTime = performance.now();
-        });
-
-        icon.addEventListener("pointermove", e => {
-          if (!active) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          const now = performance.now();
-          const dt = now - lastTime || 16;
-          velocityX = (e.clientX - lastX) / dt;
-          velocityY = (e.clientY - lastY) / dt;
-          lastX = e.clientX; lastY = e.clientY; lastTime = now;
-          active.style.left = offsetX + dx + "px";
-          active.style.top = offsetY + dy + "px";
-        });
-
-        icon.addEventListener("pointerup", e => {
-          if (!active) return;
-          active.style.cursor = "grab";
-          active.releasePointerCapture(e.pointerId);
-
-          // momentum only on touch devices
-          if (isTouch && (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01)) {
-            const decay = 0.95;  // friction
-            const step = () => {
-              offsetX = parseFloat(active.style.left);
-              offsetY = parseFloat(active.style.top);
-              velocityX *= decay;
-              velocityY *= decay;
-              offsetX += velocityX * 16; // 16ms/frame
-              offsetY += velocityY * 16;
-              active.style.left = offsetX + "px";
-              active.style.top = offsetY + "px";
-              if (Math.abs(velocityX) > 0.05 || Math.abs(velocityY) > 0.05)
-                requestAnimationFrame(step);
-            };
-            requestAnimationFrame(step);
-          }
-
-          requestAnimationFrame(() => {
-            active.style.transition = "left 0.15s ease-out, top 0.15s ease-out";
-          });
-          active = null;
-        });
-
-        icon.addEventListener("pointercancel", () => {
-          if (active) { active.style.cursor = "grab"; active = null; }
-        });
-      });
-    }
-
-    function enableLightbox() {
+    document.addEventListener("DOMContentLoaded", () => {
+      const iconsContainer = document.getElementById("icons-container");
       const lightbox = document.getElementById("lightbox");
-      const imgEl = document.getElementById("lightboxImage");
-      document.querySelectorAll(".icon img").forEach(img => {
-        img.addEventListener("click", e => {
-          e.stopPropagation();
-          imgEl.src = img.src;
-          lightbox.classList.add("visible");
-        });
+      const lightboxImg = document.getElementById("lightbox-img");
+
+      // Load image names from JSON
+      fetch("images.json")
+        .then((response) => response.json())
+        .then((images) => {
+          images.forEach((src) => {
+            const icon = document.createElement("img");
+            icon.src = `images/${src}`;
+            icon.className = "icon";
+            icon.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+            icon.style.top = `${Math.random() * (window.innerHeight - 120)}px`;
+            iconsContainer.appendChild(icon);
+
+            let isDragging = false;
+            let offsetX, offsetY, startX, startY;
+            let moved = false;
+
+            icon.addEventListener("pointerdown", (e) => {
+              e.preventDefault();
+              icon.setPointerCapture(e.pointerId);
+              isDragging = true;
+              moved = false;
+              startX = e.clientX;
+              startY = e.clientY;
+              offsetX = e.clientX - icon.getBoundingClientRect().left;
+              offsetY = e.clientY - icon.getBoundingClientRect().top;
+              icon.style.cursor = "grabbing";
+              icon.style.zIndex = 999;
+            });
+
+            icon.addEventListener("pointermove", (e) => {
+              if (!isDragging) return;
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+              icon.style.left = e.clientX - offsetX + "px";
+              icon.style.top = e.clientY - offsetY + "px";
+            });
+
+            icon.addEventListener("pointerup", (e) => {
+              icon.releasePointerCapture(e.pointerId);
+              icon.style.cursor = "grab";
+              icon.style.zIndex = 1;
+              isDragging = false;
+
+              if (!moved) {
+                lightboxImg.src = icon.src;
+                lightbox.classList.add("visible");
+              }
+            });
+          });
+        })
+        .catch((err) => console.error("Error loading images:", err));
+
+      // Close lightbox on click
+      lightbox.addEventListener("click", () => {
+        lightbox.classList.remove("visible");
       });
-      lightbox.addEventListener("click", () => lightbox.classList.remove("visible"));
-    }
+    });
   </script>
 </body>
 </html>
