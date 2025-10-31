@@ -16,7 +16,6 @@
     body.dark{background:var(--bg-dark);color:#f3f4f8}
 
     .desktop{position:relative;width:100vw;height:100vh;overflow:hidden;transition:background .45s var(--ease)}
-
     .icon{
       position:absolute;
       width:100px;
@@ -75,19 +74,17 @@
     .about-card{max-width:680px;background:var(--accent);color:#000;padding:22px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
     body.dark .about-card{background:linear-gradient(180deg,#14161b,#20232b);color:#fff}
 
+    .idle .contact-info{opacity:.7}
     .hidden{display:none!important}
   </style>
 </head>
 <body class="light">
-
-  <!-- Intro overlay -->
   <div id="intro-overlay" role="dialog" aria-modal="true">
     <h1>d0nt.blinkk</h1>
     <p>drag the icons, explore the works</p>
     <button id="enter-btn">enter</button>
   </div>
 
-  <!-- About -->
   <button class="about-btn" id="aboutBtn">?</button>
   <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
     <div class="about-card">
@@ -102,18 +99,14 @@
     </div>
   </div>
 
-  <!-- top controls -->
   <div class="controls" role="toolbar">
     <button id="themeToggle">Night</button>
   </div>
 
-  <!-- contact footer -->
   <div class="contact-info">© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">d0nt.blinkk</a></div>
 
-  <!-- main desktop canvas -->
   <div class="desktop" id="desktop"></div>
 
-  <!-- lightbox -->
   <div class="lightbox" id="lightbox" aria-hidden="true">
     <div class="lightbox-card">
       <img id="lightboxImg" src="" alt="preview" />
@@ -123,7 +116,10 @@
 
   <script>
     let topZ = 100;
-    let isListView = false;
+    let idleTimer = null;
+    let driftAnim = null;
+    const IDLE_TIMEOUT = 20000;
+
     const desktop = document.getElementById('desktop');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
@@ -135,27 +131,30 @@
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
 
-    // create icons and start motion after icons are loaded
+    function resetIdleTimer(){
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(()=>{ startDrift(); }, IDLE_TIMEOUT);
+    }
+
     fetch('images.json')
-      .then(r => r.json())
-      .then(images => {
-        images.forEach(name => createIcon(name));
-        startDrift(); // <-- constant motion starts here
-      })
-      .catch(err => console.error(err));
+      .then(r=>r.json())
+      .then(images=>{
+        images.forEach(name=>{ createIcon(name); });
+        startDrift(); // constant motion on load
+      }).catch(err=>{ console.error('images.json load error',err); });
 
     function createIcon(filename){
       const icon = document.createElement('div');
-      icon.className='icon';
-      const left=40+Math.random()*(window.innerWidth-200);
-      const top=60+Math.random()*(window.innerHeight-220);
-      icon.style.left=left+'px';
-      icon.style.top=top+'px';
-      icon.innerHTML=`<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
+      icon.className = 'icon';
+      const left = 40 + Math.random()*(window.innerWidth-200);
+      const top = 60 + Math.random()*(window.innerHeight-220);
+      icon.style.left = `${left}px`;
+      icon.style.top = `${top}px`;
+      icon.innerHTML = `<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
       desktop.appendChild(icon);
 
       const img = icon.querySelector('img');
-      let isDragging=false,startX=0,startY=0,offsetX=0,offsetY=0,moved=false;
+      let isDragging=false, startX=0, startY=0, offsetX=0, offsetY=0, moved=false;
 
       icon.addEventListener('pointerdown', e=>{
         e.preventDefault();
@@ -164,22 +163,23 @@
         startX=e.clientX; startY=e.clientY;
         offsetX=e.clientX - icon.getBoundingClientRect().left;
         offsetY=e.clientY - icon.getBoundingClientRect().top;
-        topZ++; icon.style.zIndex = topZ;
+        topZ++; icon.style.zIndex=topZ;
         icon.style.cursor='grabbing';
       });
 
       icon.addEventListener('pointermove', e=>{
         if(!isDragging) return;
-        moved=true;
-        icon.style.left = (e.clientX-offsetX)+'px';
-        icon.style.top = (e.clientY-offsetY)+'px';
+        const dx = e.clientX-startX, dy=e.clientY-startY;
+        if(Math.abs(dx)>5 || Math.abs(dy)>5) moved=true;
+        icon.style.left=(e.clientX-offsetX)+'px';
+        icon.style.top=(e.clientY-offsetY)+'px';
       });
 
       icon.addEventListener('pointerup', e=>{
         img.releasePointerCapture(e.pointerId);
         icon.style.cursor='grab';
         isDragging=false;
-        if(!moved) showLightbox(img.src, filename);
+        if(!moved){ showLightbox(img.src, filename); }
       });
 
       icon.addEventListener('pointercancel', e=>{
@@ -187,24 +187,23 @@
       });
 
       icon.addEventListener('click', e=>{
-        if(!isDragging) showLightbox(img.src, filename);
+        if(!isDragging){ showLightbox(img.src, filename); }
       });
     }
 
     function showLightbox(src, filename){
-      lightboxImg.src=src;
-      lightboxCaption.textContent=filename.replace(/\.[^/.]+$/,'');
+      lightboxImg.src = src;
+      lightboxCaption.textContent = filename.replace(/\.[^/.]+$/,'');
       lightbox.classList.add('visible');
       lightbox.setAttribute('aria-hidden','false');
     }
+
     lightbox.addEventListener('click', ()=>{ lightbox.classList.remove('visible'); lightbox.setAttribute('aria-hidden','true'); });
 
     themeToggle.addEventListener('click', ()=>{
       if(document.body.classList.contains('light')){
-        document.body.classList.remove('light'); document.body.classList.add('dark'); themeToggle.textContent='Day';
-      } else {
-        document.body.classList.remove('dark'); document.body.classList.add('light'); themeToggle.textContent='Night';
-      }
+        document.body.classList.replace('light','dark'); themeToggle.textContent='Day';
+      } else { document.body.classList.replace('dark','light'); themeToggle.textContent='Night'; }
     });
 
     enterBtn.addEventListener('click', ()=>{
@@ -213,32 +212,40 @@
     });
 
     aboutBtn.addEventListener('click', ()=>{
-      aboutOverlay.classList.add('visible'); aboutOverlay.setAttribute('aria-hidden','false');
+      aboutOverlay.classList.add('visible');
+      aboutOverlay.setAttribute('aria-hidden','false');
     });
     closeAbout.addEventListener('click', ()=>{
-      aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true');
+      aboutOverlay.classList.remove('visible');
+      aboutOverlay.setAttribute('aria-hidden','true');
     });
     aboutOverlay.addEventListener('click', e=>{
       if(e.target===aboutOverlay){ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); }
     });
 
-    // constant subtle motion
     function startDrift(){
-      const icons=document.querySelectorAll('.icon');
+      const icons = document.querySelectorAll('.icon');
+      const start = performance.now();
       function drift(t){
         icons.forEach((icon,i)=>{
           const baseX=parseFloat(icon.style.left)||0;
           const baseY=parseFloat(icon.style.top)||0;
           const amp=6;
-          const speed=0.0003 + (i%7)*0.00005;
+          const speed=0.0003+(i%7)*0.00005;
           const dx=Math.sin((t*speed)+i)*amp;
           const dy=Math.cos((t*speed*1.1)+i)*amp*0.6;
           icon.style.transform=`translate(${dx}px,${dy}px)`;
         });
-        requestAnimationFrame(drift);
+        driftAnim=requestAnimationFrame(drift);
       }
-      requestAnimationFrame(drift);
+      driftAnim=requestAnimationFrame(drift);
     }
+
+    ['pointerdown','pointermove','click','wheel','touchstart'].forEach(evt=>{
+      window.addEventListener(evt, ()=>{
+        document.querySelectorAll('.icon').forEach(icon=>icon.style.transform='none');
+      }, {passive:true});
+    });
 
     window.addEventListener('resize', ()=>{
       document.querySelectorAll('.icon').forEach(icon=>{
