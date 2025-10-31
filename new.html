@@ -31,6 +31,7 @@
       cursor: grab;
       user-select: none;
       transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+      animation: wobble 5s ease-in-out infinite;
     }
 
     .icon img {
@@ -53,7 +54,6 @@
       margin-top: 6px;
       color: #333;
     }
-
     body.night .icon span {
       color: #ddd;
     }
@@ -64,6 +64,15 @@
         width: 80px;
         height: 80px;
       }
+    }
+
+    /* Icon wobble animation */
+    @keyframes wobble {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(1px, -1px) rotate(0.2deg); }
+      50% { transform: translate(-1px, 1px) rotate(-0.2deg); }
+      75% { transform: translate(1px, 1px) rotate(0.1deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
     }
 
     /* Overlay buttons */
@@ -79,35 +88,25 @@
       backdrop-filter: blur(4px);
       transition: background 0.3s ease;
     }
+    .control-btn:hover { background: rgba(255,255,255,0.9); }
 
-    .control-btn:hover {
-      background: rgba(255, 255, 255, 0.9);
-    }
-
-    #aboutBtn {
-      top: 20px;
-      right: 20px;
-    }
-
-    #themeToggle {
-      top: 20px;
-      left: 20px;
-    }
+    #aboutBtn { top: 20px; right: 20px; }
+    #themeToggle { top: 20px; left: 20px; }
 
     /* Clock */
     #clock {
       position: fixed;
       top: 10px;
-      left: 10px;
+      left: 50%;
+      transform: translateX(-50%);
       font-family: "IBM Plex Mono", monospace;
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 500;
       color: #333;
       z-index: 1600;
       user-select: none;
     }
-    body.night #clock {
-      color: #ddd;
-    }
+    body.night #clock { color: #eee; }
 
     /* Full-screen enter overlay */
     #enterOverlay {
@@ -126,29 +125,18 @@
       cursor: pointer;
       transition: opacity 0.5s ease;
     }
-    #enterOverlay.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    #enterOverlay h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-    }
-    #enterOverlay p {
-      font-size: 16px;
-      opacity: 0.8;
-    }
+    #enterOverlay.hidden { opacity: 0; pointer-events: none; }
+    #enterOverlay h1 { font-size: 32px; margin-bottom: 20px; }
+    #enterOverlay p { font-size: 16px; opacity: 0.8; }
 
     /* About overlay */
     #aboutOverlay {
       display: none;
       position: fixed;
       z-index: 1600;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.75);
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
       color: #fff;
       display: flex;
       align-items: center;
@@ -157,35 +145,24 @@
       padding: 40px;
       backdrop-filter: blur(10px);
     }
-    #aboutOverlay.visible {
-      display: flex;
-      animation: fadeIn 0.4s ease;
-    }
-    #aboutOverlay p {
-      font-size: 16px;
-      max-width: 600px;
-      line-height: 1.6;
-    }
+    #aboutOverlay.visible { display: flex; animation: fadeIn 0.4s ease; }
+    #aboutOverlay p { font-size: 16px; max-width: 600px; line-height: 1.6; }
 
     /* Lightbox */
     .lightbox {
       display: none;
       position: fixed;
       z-index: 1200;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
-      justify-content: center;
-      align-items: center;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85);
+      justify-content: center; align-items: center;
       backdrop-filter: blur(8px);
     }
     .lightbox img {
-      max-width: 90%;
-      max-height: 90%;
+      max-width: 90%; max-height: 90%;
       border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
     }
     .lightbox span {
       position: absolute;
@@ -194,17 +171,10 @@
       font-size: 14px;
       opacity: 0.8;
     }
-    .lightbox.visible {
-      display: flex;
-      animation: fadeIn 0.3s ease;
-    }
+    .lightbox.visible { display: flex; animation: fadeIn 0.3s ease; }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    @keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
 
-    /* Footer */
     footer {
       position: fixed;
       bottom: 10px;
@@ -212,14 +182,9 @@
       font-size: 12px;
       color: #444;
     }
-    body.night footer {
-      color: #ccc;
-    }
-    footer a {
-      color: inherit;
-      text-decoration: none;
-      font-weight: 500;
-    }
+    body.night footer { color: #ccc; }
+    footer a { color: inherit; text-decoration: none; font-weight: 500; }
+
   </style>
 </head>
 <body>
@@ -238,7 +203,7 @@
     <p>Click anywhere to enter</p>
   </div>
 
-  <!-- About Overlay -->
+  <!-- About overlay -->
   <div id="aboutOverlay">
     <p>d0nt.blinkk is the creative umbrella of the multifaceted creative known as Tate.</p>
   </div>
@@ -254,126 +219,40 @@
   <script>
     // Load images
     fetch("images.json")
-      .then((response) => response.json())
-      .then((images) => {
+      .then(res => res.json())
+      .then(images => {
         const container = document.getElementById("imageContainer");
-        images.forEach((imgName) => {
+        images.forEach(imgName => {
           const icon = document.createElement("div");
           icon.classList.add("icon");
-          icon.setAttribute("draggable", "true");
-
-          const left = 50 + Math.random() * (window.innerWidth - 150);
-          const top = 80 + Math.random() * (window.innerHeight - 180);
-          icon.style.left = `${left}px`;
-          icon.style.top = `${top}px`;
-
-          icon.innerHTML = `
-            <img src="images/${imgName}" alt="${imgName}">
-            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
-          `;
+          icon.setAttribute("draggable","true");
+          icon.style.left = 50 + Math.random() * (window.innerWidth-150) + "px";
+          icon.style.top = 80 + Math.random() * (window.innerHeight-180) + "px";
+          icon.innerHTML = `<img src="images/${imgName}" alt="${imgName}">
+            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>`;
           container.appendChild(icon);
         });
-
         enableDragging();
         enableLightbox();
       });
 
-    // Drag logic
+    // Drag logic with wobble pause
     function enableDragging() {
       let highestZ = 10;
-      document.querySelectorAll(".icon").forEach((icon) => {
+      document.querySelectorAll(".icon").forEach(icon => {
         let isDragging = false;
         let offsetX, offsetY;
 
         icon.addEventListener("mousedown", startDrag);
-        icon.addEventListener("touchstart", startDrag, { passive: true });
+        icon.addEventListener("touchstart", startDrag, { passive:true });
 
-        function startDrag(e) {
+        function startDrag(e){
           isDragging = true;
-          icon.style.cursor = "grabbing";
-          icon.style.zIndex = ++highestZ;
+          icon.style.cursor="grabbing";
+          icon.style.animation="none"; // stop wobble
+          icon.style.zIndex=++highestZ;
           const event = e.touches ? e.touches[0] : e;
-          offsetX = event.clientX - icon.offsetLeft;
-          offsetY = event.clientY - icon.offsetTop;
+          offsetX=event.clientX-icon.offsetLeft;
+          offsetY=event.clientY-icon.offsetTop;
 
-          document.addEventListener("mousemove", drag);
-          document.addEventListener("touchmove", drag, { passive: false });
-          document.addEventListener("mouseup", endDrag);
-          document.addEventListener("touchend", endDrag);
-        }
-
-        function drag(e) {
-          if (!isDragging) return;
-          const event = e.touches ? e.touches[0] : e;
-          icon.style.left = event.clientX - offsetX + "px";
-          icon.style.top = event.clientY - offsetY + "px";
-        }
-
-        function endDrag() {
-          isDragging = false;
-          icon.style.cursor = "grab";
-          document.removeEventListener("mousemove", drag);
-          document.removeEventListener("touchmove", drag);
-          document.removeEventListener("mouseup", endDrag);
-          document.removeEventListener("touchend", endDrag);
-        }
-      });
-    }
-
-    // Lightbox
-    function enableLightbox() {
-      const lightbox = document.getElementById("lightbox");
-      const lightboxImage = document.getElementById("lightboxImage");
-      const lightboxCaption = document.getElementById("lightboxCaption");
-
-      document.querySelectorAll(".icon img").forEach((img) => {
-        img.addEventListener("click", () => {
-          lightboxImage.src = img.src;
-          lightboxCaption.textContent = img.alt.replace(/\.[^/.]+$/, "");
-          lightbox.classList.add("visible");
-        });
-      });
-
-      lightbox.addEventListener("click", () => {
-        lightbox.classList.remove("visible");
-      });
-    }
-
-    // About Overlay
-    const aboutBtn = document.getElementById("aboutBtn");
-    const aboutOverlay = document.getElementById("aboutOverlay");
-    aboutBtn.addEventListener("click", () => {
-      aboutOverlay.classList.toggle("visible");
-    });
-    aboutOverlay.addEventListener("click", () => {
-      aboutOverlay.classList.remove("visible");
-    });
-
-    // Theme toggle
-    const themeToggle = document.getElementById("themeToggle");
-    themeToggle.addEventListener("click", () => {
-      document.body.classList.toggle("night");
-      themeToggle.textContent = document.body.classList.contains("night") ? "🌙" : "☀️";
-    });
-
-    // Enter overlay
-    const enterOverlay = document.getElementById("enterOverlay");
-    enterOverlay.addEventListener("click", () => {
-      enterOverlay.classList.add("hidden");
-    });
-
-    // Digital Clock
-    function updateClock() {
-      const clock = document.getElementById("clock");
-      const now = new Date();
-      const hours = now.getHours();
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
-      clock.textContent = `${displayHours}:${minutes} ${ampm}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-  </script>
-</body>
-</html>
+          document.addEventListener("mousemove
