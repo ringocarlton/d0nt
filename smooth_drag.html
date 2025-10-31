@@ -11,7 +11,7 @@
       background: linear-gradient(180deg, #d9e0e7 0%, #cdd5df 100%);
       font-family: "IBM Plex Mono", monospace;
       overflow: hidden;
-      touch-action: none; /* Prevent iOS scrolling interference */
+      touch-action: none;
     }
 
     .desktop {
@@ -26,8 +26,9 @@
       text-align: center;
       cursor: grab;
       user-select: none;
-      touch-action: none; /* Needed for fluid pointer handling */
-      transition: transform 0.15s ease-out;
+      touch-action: none;
+      will-change: left, top;
+      transition: left 0.15s ease-out, top 0.15s ease-out;
     }
 
     .icon img {
@@ -37,12 +38,9 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       object-fit: cover;
       transition: transform 0.2s ease;
-      will-change: transform;
     }
 
-    .icon img:hover {
-      transform: scale(1.05);
-    }
+    .icon img:hover { transform: scale(1.05); }
 
     .icon span {
       display: block;
@@ -53,32 +51,25 @@
 
     @media (max-width: 768px) {
       .icon,
-      .icon img {
-        width: 80px;
-        height: 80px;
-      }
+      .icon img { width: 80px; height: 80px; }
     }
 
-    /* Lightbox styles */
     .lightbox {
       display: none;
       position: fixed;
       z-index: 1000;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.85);
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.85);
       justify-content: center;
       align-items: center;
       backdrop-filter: blur(8px);
     }
 
     .lightbox img {
-      max-width: 90%;
-      max-height: 90%;
+      max-width: 90%; max-height: 90%;
       border-radius: 16px;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
       transition: transform 0.3s ease;
     }
 
@@ -88,130 +79,116 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      from { opacity: 0; } to { opacity: 1; }
     }
   </style>
 </head>
 <body>
   <div class="desktop" id="imageContainer"></div>
 
-  <!-- Lightbox overlay -->
   <div class="lightbox" id="lightbox">
     <img src="" alt="Preview" id="lightboxImage" />
   </div>
 
   <script>
-    // Fetch image filenames from images.json
     fetch("images.json")
-      .then((response) => response.json())
-      .then((images) => {
+      .then(r => r.json())
+      .then(images => {
         const container = document.getElementById("imageContainer");
-
-        images.forEach((imgName) => {
+        images.forEach(name => {
           const icon = document.createElement("div");
           icon.classList.add("icon");
-
-          const left = 50 + Math.random() * (window.innerWidth - 150);
-          const top = 80 + Math.random() * (window.innerHeight - 180);
-          icon.style.left = `${left}px`;
-          icon.style.top = `${top}px`;
-
           icon.innerHTML = `
-            <img src="images/${imgName}" alt="${imgName}">
-            <span>${imgName.replace(/\.[^/.]+$/, "")}</span>
+            <img src="images/${name}" alt="${name}">
+            <span>${name.replace(/\.[^/.]+$/, "")}</span>
           `;
+          icon.style.left = `${50 + Math.random() * (window.innerWidth - 150)}px`;
+          icon.style.top = `${80 + Math.random() * (window.innerHeight - 180)}px`;
           container.appendChild(icon);
         });
-
-        enableSmoothDragging();
+        enableFluidDragging();
         enableLightbox();
-      })
-      .catch((error) => console.error("Error loading images:", error));
+      });
 
-    // Unified smooth drag (works on desktop & mobile)
-    function enableSmoothDragging() {
+    function enableFluidDragging() {
       const icons = document.querySelectorAll(".icon");
-      let activeIcon = null;
-      let startX = 0, startY = 0;
-      let initialX = 0, initialY = 0;
-      let lastMoveTime = 0;
+      let active = null, startX, startY, offsetX, offsetY;
+      let lastX = 0, lastY = 0, lastTime = 0;
+      let velocityX = 0, velocityY = 0;
+      const isTouch = /Mobi|Android/i.test(navigator.userAgent);
 
       icons.forEach(icon => {
-        icon.addEventListener("pointerdown", (e) => {
+        icon.addEventListener("pointerdown", e => {
           e.preventDefault();
-          activeIcon = icon;
+          active = icon;
           icon.setPointerCapture(e.pointerId);
           icon.style.cursor = "grabbing";
-
-          startX = e.clientX;
-          startY = e.clientY;
-          initialX = parseFloat(icon.style.left);
-          initialY = parseFloat(icon.style.top);
+          icon.style.transition = "none";
+          startX = e.clientX; startY = e.clientY;
+          offsetX = parseFloat(icon.style.left);
+          offsetY = parseFloat(icon.style.top);
+          lastX = e.clientX; lastY = e.clientY; lastTime = performance.now();
         });
 
-        icon.addEventListener("pointermove", (e) => {
-          if (!activeIcon || e.pointerId === undefined) return;
-
+        icon.addEventListener("pointermove", e => {
+          if (!active) return;
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
           const now = performance.now();
-          const dt = now - lastMoveTime;
-
-          // Limit update frequency for smoothness
-          if (dt < 8) return;
-          lastMoveTime = now;
-
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-
-          activeIcon.style.transform = `translate(${dx}px, ${dy}px)`;
+          const dt = now - lastTime || 16;
+          velocityX = (e.clientX - lastX) / dt;
+          velocityY = (e.clientY - lastY) / dt;
+          lastX = e.clientX; lastY = e.clientY; lastTime = now;
+          active.style.left = offsetX + dx + "px";
+          active.style.top = offsetY + dy + "px";
         });
 
-        icon.addEventListener("pointerup", (e) => {
-          if (!activeIcon) return;
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
+        icon.addEventListener("pointerup", e => {
+          if (!active) return;
+          active.style.cursor = "grab";
+          active.releasePointerCapture(e.pointerId);
 
-          // Smoothly animate to final position
-          activeIcon.style.transition = "transform 0.15s ease-out";
+          // momentum only on touch devices
+          if (isTouch && (Math.abs(velocityX) > 0.01 || Math.abs(velocityY) > 0.01)) {
+            const decay = 0.95;  // friction
+            const step = () => {
+              offsetX = parseFloat(active.style.left);
+              offsetY = parseFloat(active.style.top);
+              velocityX *= decay;
+              velocityY *= decay;
+              offsetX += velocityX * 16; // 16ms/frame
+              offsetY += velocityY * 16;
+              active.style.left = offsetX + "px";
+              active.style.top = offsetY + "px";
+              if (Math.abs(velocityX) > 0.05 || Math.abs(velocityY) > 0.05)
+                requestAnimationFrame(step);
+            };
+            requestAnimationFrame(step);
+          }
+
           requestAnimationFrame(() => {
-            activeIcon.style.left = initialX + dx + "px";
-            activeIcon.style.top = initialY + dy + "px";
-            activeIcon.style.transform = "translate(0,0)";
+            active.style.transition = "left 0.15s ease-out, top 0.15s ease-out";
           });
-
-          setTimeout(() => {
-            activeIcon.style.transition = "none";
-            activeIcon.style.cursor = "grab";
-            activeIcon = null;
-          }, 160);
+          active = null;
         });
 
         icon.addEventListener("pointercancel", () => {
-          if (!activeIcon) return;
-          activeIcon.style.transition = "none";
-          activeIcon.style.transform = "translate(0,0)";
-          activeIcon.style.cursor = "grab";
-          activeIcon = null;
+          if (active) { active.style.cursor = "grab"; active = null; }
         });
       });
     }
 
-    // Lightbox functionality
     function enableLightbox() {
       const lightbox = document.getElementById("lightbox");
-      const lightboxImage = document.getElementById("lightboxImage");
-
-      document.querySelectorAll(".icon img").forEach((img) => {
-        img.addEventListener("click", (e) => {
+      const imgEl = document.getElementById("lightboxImage");
+      document.querySelectorAll(".icon img").forEach(img => {
+        img.addEventListener("click", e => {
           e.stopPropagation();
-          lightboxImage.src = img.src;
+          imgEl.src = img.src;
           lightbox.classList.add("visible");
         });
       });
-
-      lightbox.addEventListener("click", () => {
-        lightbox.classList.remove("visible");
-      });
+      lightbox.addEventListener("click", () => lightbox.classList.remove("visible"));
     }
   </script>
 </body>
