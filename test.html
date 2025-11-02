@@ -15,10 +15,8 @@
     body.light{background:var(--bg-light);color:#000}
     body.dark{background:var(--bg-dark);color:#f3f4f8}
 
-    /* Desktop canvas */
     .desktop{position:relative;width:100vw;height:100vh;overflow:hidden;transition:background .45s var(--ease)}
 
-    /* icon (container) */
     .icon{
       position:absolute;
       width:100px;
@@ -47,14 +45,12 @@
       .icon span{font-size:10px}
     }
 
-    /* lightbox */
     .lightbox{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center}
     .lightbox.visible{display:flex}
     .lightbox-card{max-width:92%;max-height:92%;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center}
     .lightbox-card img{max-width:100%;max-height:80vh;border-radius:10px;display:block}
     .lightbox-caption{padding:10px 14px;font-size:13px;color:var(--accent);background:rgba(0,0,0,.12);width:100%;text-align:center}
 
-    /* intro overlay */
     #intro-overlay{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s var(--ease)}
     #intro-overlay.hidden{opacity:0;pointer-events:none;display:block}
     #intro-overlay h1{margin:0;font-size:1.6rem;letter-spacing:1px}
@@ -62,40 +58,33 @@
     #enter-btn{border:1px solid #fff;padding:8px 14px;background:transparent;color:#fff;cursor:pointer;border-radius:8px;font-family:inherit}
     #enter-btn:hover{background:#fff;color:#000}
 
-    /* contact footer */
     .contact-info{position:fixed;left:16px;bottom:12px;font-size:12px;color:rgba(0,0,0,.6);z-index:2000}
     body.dark .contact-info{color:rgba(255,255,255,.65)}
     .contact-info a{color:inherit;text-decoration:none;font-weight:600}
 
-    /* top-controls */
     .controls{position:fixed;top:12px;right:16px;display:flex;gap:8px;z-index:2000}
     .controls button{background:rgba(255,255,255,.85);border:0;padding:6px 10px;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .2s var(--ease)}
     body.dark .controls button{background:rgba(20,20,30,.9);color:#fff}
     .controls button:hover{transform:translateY(-2px)}
 
-    /* about button top-left */
     .about-btn{position:fixed;top:12px;left:16px;z-index:2000;background:rgba(255,255,255,.8);border-radius:8px;padding:6px 9px;border:0;cursor:pointer}
     body.dark .about-btn{background:rgba(20,20,30,.9);color:#fff}
 
-    /* about overlay */
     .about-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:3500}
     .about-overlay.visible{display:flex}
     .about-card{max-width:680px;background:var(--accent);color:#000;padding:22px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
     body.dark .about-card{background:linear-gradient(180deg,#14161b,#20232b);color:#fff}
 
-    /* subtle idle indicator */
     .idle .contact-info{opacity:.7}
   </style>
 </head>
 <body class="light">
-  <!-- Intro overlay -->
   <div id="intro-overlay" role="dialog" aria-modal="true">
     <h1>d0nt.blinkk</h1>
     <p>drag the icons, explore the works</p>
     <button id="enter-btn">enter</button>
   </div>
 
-  <!-- About -->
   <button class="about-btn" id="aboutBtn">?</button>
   <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
     <div class="about-card">
@@ -110,18 +99,14 @@
     </div>
   </div>
 
-  <!-- top controls -->
   <div class="controls" role="toolbar">
     <button id="themeToggle">Night</button>
   </div>
 
-  <!-- contact footer -->
   <div class="contact-info">© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">d0nt.blinkk</a></div>
 
-  <!-- main desktop canvas -->
   <div class="desktop" id="desktop"></div>
 
-  <!-- lightbox -->
   <div class="lightbox" id="lightbox" aria-hidden="true">
     <div class="lightbox-card">
       <img id="lightboxImg" src="" alt="preview" />
@@ -142,7 +127,6 @@
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
 
-    // create icons from images.json
     fetch('images.json')
       .then(r=>r.json())
       .then(images=>{ images.forEach(createIcon); startDrift(); })
@@ -177,7 +161,7 @@
       function onPointerMove(e){
         if(!isDragging) return;
         const dx = e.clientX - startX, dy = e.clientY - startY;
-        if(Math.abs(dx)>5 || Math.abs(dy)>5) moved=true;
+        if(Math.abs(dx)>8 || Math.abs(dy)>8) moved=true;
         const now = performance.now();
         const dt = Math.max(16, now - lastTime);
         vx = (e.clientX - lastX)/dt;
@@ -192,7 +176,6 @@
         icon.style.cursor='grab';
         isDragging=false;
 
-        // momentum for touch only
         if(isTouchDevice && (Math.abs(vx)>0.01 || Math.abs(vy)>0.01)){
           let decay=0.92;
           function step(){
@@ -217,8 +200,8 @@
       icon.addEventListener('pointerup', onPointerUp);
       icon.addEventListener('pointercancel', ()=>{ isDragging=false; icon.style.cursor='grab'; });
 
-      // click for touch only (mobile)
-      icon.addEventListener('click', ()=>{ if(isTouchDevice && !moved) showLightbox(img.src, filename); });
+      // ✅ Fixed: Lightbox now works on desktop & mobile
+      icon.addEventListener('click', ()=>{ if(!moved) showLightbox(img.src, filename); });
     }
 
     function showLightbox(src, filename){
@@ -227,37 +210,48 @@
       lightbox.classList.add('visible');
       lightbox.setAttribute('aria-hidden','false');
     }
-    lightbox.addEventListener('click', ()=>{ lightbox.classList.remove('visible'); lightbox.setAttribute('aria-hidden','true'); });
 
-    // theme toggle
+    lightbox.addEventListener('click', ()=>{ 
+      lightbox.classList.remove('visible'); 
+      lightbox.setAttribute('aria-hidden','true'); 
+    });
+
     themeToggle.addEventListener('click', ()=>{
       if(document.body.classList.contains('light')){
-        document.body.classList.remove('light'); document.body.classList.add('dark');
+        document.body.classList.remove('light'); 
+        document.body.classList.add('dark');
         themeToggle.textContent='Day';
       } else {
-        document.body.classList.remove('dark'); document.body.classList.add('light');
+        document.body.classList.remove('dark'); 
+        document.body.classList.add('light');
         themeToggle.textContent='Night';
       }
     });
 
-    // Intro overlay
     enterBtn.addEventListener('click', ()=>{
       introOverlay.classList.add('hidden');
       setTimeout(()=>{ introOverlay.style.display='none'; },700);
     });
 
-    // About overlay
-    aboutBtn.addEventListener('click', ()=>{ aboutOverlay.classList.add('visible'); aboutOverlay.setAttribute('aria-hidden','false'); });
-    closeAbout.addEventListener('click', ()=>{ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); });
-    aboutOverlay.addEventListener('click', (e)=>{ if(e.target===aboutOverlay){ aboutOverlay.classList.remove('visible'); aboutOverlay.setAttribute('aria-hidden','true'); } });
+    aboutBtn.addEventListener('click', ()=>{ 
+      aboutOverlay.classList.add('visible'); 
+      aboutOverlay.setAttribute('aria-hidden','false'); 
+    });
+    closeAbout.addEventListener('click', ()=>{ 
+      aboutOverlay.classList.remove('visible'); 
+      aboutOverlay.setAttribute('aria-hidden','true'); 
+    });
+    aboutOverlay.addEventListener('click', (e)=>{ 
+      if(e.target===aboutOverlay){ 
+        aboutOverlay.classList.remove('visible'); 
+        aboutOverlay.setAttribute('aria-hidden','true'); 
+      } 
+    });
 
-    // constant subtle drift for all icons
     function startDrift(){
       const icons = document.querySelectorAll('.icon');
       function drift(t){
         icons.forEach((icon,i)=>{
-          const baseX=parseFloat(icon.style.left)||0;
-          const baseY=parseFloat(icon.style.top)||0;
           const amp=6;
           const speed=0.0003 + (i%7)*0.00005;
           const dx=Math.sin((t*speed)+(i))*amp;
@@ -269,7 +263,6 @@
       requestAnimationFrame(drift);
     }
 
-    // window resize
     window.addEventListener('resize', ()=>{
       document.querySelectorAll('.icon').forEach(icon=>{
         const x=parseFloat(icon.style.left)||0;
@@ -281,9 +274,12 @@
       });
     });
 
-    // Accessibility: escape key
     window.addEventListener('keydown', (e)=>{
-      if(e.key==='Escape'){ lightbox.classList.remove('visible'); aboutOverlay.classList.remove('visible'); introOverlay.classList.add('hidden'); }
+      if(e.key==='Escape'){ 
+        lightbox.classList.remove('visible'); 
+        aboutOverlay.classList.remove('visible'); 
+        introOverlay.classList.add('hidden'); 
+      }
     });
   </script>
 </body>
