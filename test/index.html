@@ -109,10 +109,10 @@
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
 
-    fetch('projects.json')
-      .then(r=>r.json())
-      .then(items=>{ items.forEach(createIcon); startDrift(); })
-      .catch(err=>{
+    fetch('test-projects.json')
+  .then(r => r.json())
+  .then(images => { images.forEach(createIcon); startDrift(); })
+  .catch(err => { console.error('test-projects.json load error', err); });
         console.error('projects.json load error, falling back to images.json',err);
         fetch('images.json')
           .then(r=>r.json())
