@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Test Portfolio</title>
-<link rel="icon" type="image/png" href="favicon.png">
+<link rel="icon" type="image/png" href="../favicon.png">
 <style>
 body{margin:0;font-family:sans-serif;overflow:hidden}
 .desktop{position:relative;width:100vw;height:100vh;background:#111;color:#fff;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;padding:20px;gap:20px}
@@ -13,8 +12,8 @@ body{margin:0;font-family:sans-serif;overflow:hidden}
 .icon img{width:100%;border-radius:8px}
 .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);align-items:center;justify-content:center;z-index:3000}
 .lightbox.visible{display:flex}
-.lightbox-content{max-width:90%;max-height:90%;}
-.lightbox-content img, .lightbox-content video{max-width:100%;max-height:80vh;border-radius:10px}
+.lightbox-content{max-width:90%;max-height:90%}
+.lightbox-content img,.lightbox-content video{max-width:100%;max-height:80vh;border-radius:10px}
 </style>
 </head>
 <body>
@@ -31,26 +30,32 @@ fetch('test-projects.json')
     const desktop = document.getElementById('desktop');
     const lightbox = document.getElementById('lightbox');
     const lightboxContent = document.getElementById('lightboxContent');
+
     items.forEach(item=>{
       const div = document.createElement('div');
       div.className='icon';
-      div.innerHTML=`<img src="images/${item.file}" alt="${item.title}"><div>${item.title}</div>`;
+      // Reference main images folder
+      div.innerHTML = `<img src="../images/${item.file}" alt="${item.title}"><div>${item.title}</div>`;
       desktop.appendChild(div);
+
       div.addEventListener('click', ()=>{
         lightboxContent.innerHTML = '';
         if(item.video){
+          // Reference main videos folder
           const video = document.createElement('video');
-          video.src='videos/'+item.video;
-          video.controls=true; video.autoplay=true;
+          video.src='../videos/'+item.video;
+          video.controls=true;
+          video.autoplay=true;
           lightboxContent.appendChild(video);
         } else {
           const img = document.createElement('img');
-          img.src='images/'+item.file;
+          img.src='../images/'+item.file;
           lightboxContent.appendChild(img);
         }
         lightbox.classList.add('visible');
       });
     });
+
     lightbox.addEventListener('click', ()=>{ lightbox.classList.remove('visible'); });
   });
 </script>
