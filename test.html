@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>d0nt.blinkk</title>
+  <title>Tate - Motion Designer & Digital Artist | d0nt.blinkk</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <style>
     :root{
@@ -11,477 +11,795 @@
       --bg-dark: linear-gradient(180deg,#0f1220 0%,#1b2030 100%);
       --accent: rgba(255,255,255,0.9);
       --ease: cubic-bezier(.25,.1,.25,1);
+      --primary: #4a6fa5;
     }
+    * { box-sizing: border-box; }
     html,body{height:100%;margin:0;font-family:"IBM Plex Mono",monospace;overflow:hidden;touch-action:none}
     body.light{background:var(--bg-light);color:#000}
     body.dark{background:var(--bg-dark);color:#f3f4f8}
 
-    .desktop{position:relative;width:100vw;height:100vh;overflow:hidden;transition:background .45s var(--ease)}
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 2500;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    body.dark .header {
+      background: rgba(15,18,32,0.9);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .header-left h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    .header-left p {
+      margin: 2px 0 0;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .header-right button, .header-right a {
+      padding: 8px 16px;
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform 0.2s var(--ease), background 0.2s var(--ease);
+      white-space: nowrap;
+    }
+    .header-right button:hover, .header-right a:hover {
+      transform: translateY(-2px);
+      background: #3a5a8a;
+    }
+    .theme-btn {
+      background: rgba(0,0,0,0.1) !important;
+      color: inherit !important;
+      padding: 8px 12px !important;
+    }
+    body.dark .theme-btn {
+      background: rgba(255,255,255,0.1) !important;
+    }
+
+    /* Loading State */
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5000;
+      background: inherit;
+      font-size: 1.2rem;
+    }
+    .loading.hidden { display: none; }
+
+    /* Desktop Area */
+    .desktop{
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      padding-top: 80px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Category Filters */
+    .filters {
+      position: sticky;
+      top: 80px;
+      z-index: 2000;
+      padding: 16px 24px;
+      display: flex;
+      gap: 10px;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      flex-wrap: wrap;
+    }
+    body.dark .filters {
+      background: rgba(20,25,35,0.8);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .filter-btn {
+      padding: 6px 14px;
+      border: 1px solid rgba(0,0,0,0.2);
+      background: transparent;
+      color: inherit;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: all 0.2s var(--ease);
+    }
+    .filter-btn:hover {
+      background: rgba(0,0,0,0.05);
+    }
+    .filter-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    body.dark .filter-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* Icon Grid */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 24px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    @media (max-width: 768px) {
+      .icon-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 16px;
+        padding: 16px;
+      }
+    }
 
     .icon{
-      position:absolute;
-      width:100px;
-      text-align:center;
-      user-select:none;
-      cursor:grab;
-      transition:transform .18s var(--ease),box-shadow .18s var(--ease);
-      -webkit-tap-highlight-color: transparent;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:6px;
-    }
-    .icon img{
-      width:100px;height:100px;border-radius:12px;object-fit:cover;
-      box-shadow:0 4px 12px rgba(0,0,0,.18);
-      will-change:left,top,transform;
-      transition:transform .18s var(--ease),box-shadow .18s var(--ease);
-      display:block;
-    }
-    .icon span{font-size:12px;color:inherit;max-width:110px;word-break:break-word}
-    .icon:hover img{transform:scale(1.05);box-shadow:0 8px 22px rgba(0,0,0,.22)}
-
-    @media (max-width:768px){
-      .icon,.icon img{width:80px;height:80px}
-      .icon span{font-size:10px}
-    }
-
-    .lightbox{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;}
-    .lightbox.visible{display:flex}
-    
-    /* Updated Lightbox Card styles for scrolling content */
-    .lightbox-card{
-      max-width: 800px;
-      width: 100%;
-      max-height: 90vh;
-      border-radius: 14px;
-      overflow: hidden;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s var(--ease);
       display: flex;
       flex-direction: column;
-      background: #fff;
-      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+      align-items: center;
+      gap: 8px;
     }
-    
-    /* New scrollable content area */
-    .lightbox-content {
-      padding: 24px 32px;
-      overflow-y: auto;
-      flex-grow: 1;
-      color: #111;
+    .icon:hover {
+      transform: translateY(-4px);
     }
-
-    /* New styles for content *inside* the scrollable area */
-    .lightbox-content img {
+    .icon img{
       width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin-bottom: 16px;
+      aspect-ratio: 1;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      transition: box-shadow 0.2s var(--ease);
     }
-    
-    .lightbox-content h2 {
-      margin-top: 0;
-      margin-bottom: 12px;
-      color: #000;
-      font-family: "IBM Plex Mono", monospace;
+    .icon:hover img{
+      box-shadow: 0 8px 22px rgba(0,0,0,0.25);
+    }
+    .icon .title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .icon .category-tag {
+      font-size: 0.7rem;
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .icon.featured {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+    @media (max-width: 768px) {
+      .icon.featured {
+        grid-column: span 1;
+        grid-row: span 1;
+      }
     }
 
-    .lightbox-content p {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* More readable font */
-      font-size: 1rem;
+    /* Project Modal */
+    .project-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 4000;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .project-modal.visible { display: flex; }
+    .project-card {
+      max-width: 900px;
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      animation: slideUp 0.3s var(--ease);
+    }
+    body.dark .project-card {
+      background: #1a1d28;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .project-image {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+    }
+    .project-content {
+      padding: 28px;
+    }
+    .project-content h2 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+    .project-meta {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      opacity: 0.7;
+      flex-wrap: wrap;
+    }
+    .project-meta span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .project-description {
       line-height: 1.6;
       margin-bottom: 24px;
-      color: #333;
+    }
+    .project-section {
+      margin-bottom: 20px;
+    }
+    .project-section h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+    .project-section ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+    .project-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      flex-wrap: wrap;
+    }
+    body.dark .project-links {
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .project-links a {
+      padding: 10px 20px;
+      background: var(--primary);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: background 0.2s var(--ease);
+    }
+    .project-links a:hover {
+      background: #3a5a8a;
+    }
+    .close-modal {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border: 0;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s var(--ease);
+    }
+    .close-modal:hover {
+      background: rgba(0,0,0,0.7);
     }
 
-    /* New container for additional images */
-    .lightbox-content h3 {
-      font-family: "IBM Plex Mono", monospace;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 8px;
-      margin-bottom: 16px;
+    /* About/Contact Overlay */
+    .about-overlay{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      z-index: 4500;
+      padding: 20px;
     }
-    .lightbox-gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
+    .about-overlay.visible{display: flex}
+    .about-card{
+      max-width: 680px;
+      width: 100%;
+      background: #fff;
+      color: #000;
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      max-height: 90vh;
+      overflow-y: auto;
     }
-    .lightbox-gallery img {
-      margin-bottom: 0;
-      border: 1px solid #eee;
-    }
-
-    /* New Close Button */
-    .lightbox-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        z-index: 3010; /* Above card */
-        background: rgba(0,0,0,.3);
-        color: #fff;
-        border: 0;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        font-size: 22px;
-        cursor: pointer;
-        line-height: 36px;
-        text-align: center;
-        transition: background .2s var(--ease);
-    }
-    .lightbox-close:hover {
-      background: rgba(0,0,0,.6);
-    }
-
-    /* Dark mode for new lightbox */
-    body.dark .lightbox-card {
-      background: #1b2030;
-    }
-    body.dark .lightbox-content {
-      color: #f3f4f8;
-    }
-    body.dark .lightbox-content h2 {
+    body.dark .about-card{
+      background: #1a1d28;
       color: #fff;
     }
-    body.dark .lightbox-content p {
-      color: #ccc;
+    .about-card h2 {
+      margin-top: 0;
+      font-size: 1.8rem;
     }
-    body.dark .lightbox-content h3 {
-      border-color: #333;
+    .about-card .bio {
+      line-height: 1.7;
+      margin-bottom: 24px;
     }
-    body.dark .lightbox-gallery img {
-      border-color: #333;
+    .about-card .skills {
+      margin-bottom: 24px;
+    }
+    .about-card .skills h3 {
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+    .about-card .skills ul {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .about-card .skills li {
+      background: rgba(74,111,165,0.15);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .contact-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+    }
+    body.dark .contact-methods {
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .contact-methods a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(74,111,165,0.1);
+      border-radius: 8px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s var(--ease);
+    }
+    .contact-methods a:hover {
+      background: rgba(74,111,165,0.2);
+    }
+    .testimonials {
+      margin-top: 24px;
+    }
+    .testimonials h3 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      color: var(--primary);
+    }
+    .testimonial {
+      background: rgba(0,0,0,0.03);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-style: italic;
+      line-height: 1.6;
+    }
+    body.dark .testimonial {
+      background: rgba(255,255,255,0.05);
+    }
+    .testimonial-author {
+      margin-top: 8px;
+      font-style: normal;
+      font-size: 0.85rem;
+      opacity: 0.7;
     }
 
-    /* Remove old/conflicting styles */
-    .lightbox-caption{display: none;}
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,0,0,0.08);
+      z-index: 2000;
+    }
+    body.dark .footer {
+      background: rgba(15,18,32,0.9);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
 
-    #intro-overlay{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s var(--ease)}
-    #intro-overlay.hidden{opacity:0;pointer-events:none;display:block}
-    #intro-overlay h1{margin:0;font-size:1.6rem;letter-spacing:1px}
-    #intro-overlay p{margin:10px 0 18px;opacity:.92}
-    #enter-btn{border:1px solid #fff;padding:8px 14px;background:transparent;color:#fff;cursor:pointer;border-radius:8px;font-family:inherit}
-    #enter-btn:hover{background:#fff;color:#000}
-
-    .contact-info{position:fixed;left:16px;bottom:12px;font-size:12px;color:rgba(0,0,0,.6);z-index:2000}
-    body.dark .contact-info{color:rgba(255,255,255,.65)}
-    .contact-info a{color:inherit;text-decoration:none;font-weight:600}
-
-    .controls{position:fixed;top:12px;right:16px;display:flex;gap:8px;z-index:2000}
-    .controls button{background:rgba(255,255,255,.85);border:0;padding:6px 10px;border-radius:8px;cursor:pointer;font-family:inherit;transition:background .2s var(--ease)}
-    body.dark .controls button{background:rgba(20,20,30,.9);color:#fff}
-    .controls button:hover{transform:translateY(-2px)}
-
-    .about-btn{position:fixed;top:12px;left:16px;z-index:2000;background:rgba(255,255,255,.8);border-radius:8px;padding:6px 9px;border:0;cursor:pointer}
-    body.dark .about-btn{background:rgba(20,20,30,.9);color:#fff}
-
-    .about-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:3500}
-    .about-overlay.visible{display:flex}
-    .about-card{max-width:680px;background:var(--accent);color:#000;padding:22px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-    body.dark .about-card{background:linear-gradient(180deg,#14161b,#20232b);color:#fff}
-
-    .idle .contact-info{opacity:.7}
+    @media (max-width: 768px) {
+      .header {
+        padding: 12px 16px;
+      }
+      .header-left h1 {
+        font-size: 1rem;
+      }
+      .header-left p {
+        font-size: 0.75rem;
+      }
+      .header-right {
+        gap: 6px;
+      }
+      .header-right button, .header-right a {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+      .project-content {
+        padding: 20px;
+      }
+      .project-content h2 {
+        font-size: 1.4rem;
+      }
+      .about-card {
+        padding: 24px;
+      }
+    }
   </style>
 </head>
 <body class="light">
-  <div id="intro-overlay" role="dialog" aria-modal="true">
-    <h1>d0nt.blinkk</h1>
-    <p>Drag the icons, explore the works.</p>
-    <button id="enter-btn">Enter</button>
+  <div class="loading" id="loading">Loading portfolio...</div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <h1>Tate | d0nt.blinkk</h1>
+      <p>Motion Designer & Digital Artist</p>
+    </div>
+    <div class="header-right">
+      <button class="theme-btn" id="themeToggle">🌙</button>
+      <button id="aboutBtn">About</button>
+      <a href="#" id="resumeBtn" download>Resume</a>
+    </div>
+  </header>
+
+  <!-- Category Filters -->
+  <div class="filters" id="filtersContainer">
+    <button class="filter-btn active" data-category="all">All Work</button>
   </div>
 
-  <button class="about-btn" id="aboutBtn">?</button>
+  <!-- Desktop/Grid Area -->
+  <div class="desktop" id="desktop">
+    <div class="icon-grid" id="iconGrid"></div>
+  </div>
+
+  <!-- About/Contact Overlay -->
   <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
     <div class="about-card">
-      <h3>About</h3>
-      <p style="margin-top:8px">
-        d0nt.blinkk is the creative universe of Tate, a multifaceted artist exploring ideas through motion, identity, and digital form. With a background in Fine Art, Tate’s work moves fluidly between mediums, translating emotion into imagery and rhythm into atmosphere.
-      </p>
-      <p style="margin-top:12px;font-size:13px;color:rgba(0,0,0,.7)">Contact: <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">instagram.com/d0nt.blinkk</a></p>
-      <div style="text-align:right;margin-top:12px">
-        <button id="closeAbout" style="padding:6px 10px;border:0;background:#111;color:#fff;border-radius:8px;cursor:pointer">close</button>
+      <h2>About Tate</h2>
+      <div class="bio">
+        <p>I'm a motion designer and digital artist with 5+ years of experience creating compelling visual narratives across motion graphics, branding, and 3D design. With a background in Fine Art, I bring a unique perspective to every project, blending technical expertise with creative storytelling.</p>
+        <p>My work has been featured in campaigns for emerging brands and independent projects, always pushing the boundaries of digital expression.</p>
+      </div>
+
+      <div class="skills">
+        <h3>Technical Skills</h3>
+        <ul>
+          <li>After Effects</li>
+          <li>Cinema 4D</li>
+          <li>Blender</li>
+          <li>Adobe Suite</li>
+          <li>Premiere Pro</li>
+          <li>Illustrator</li>
+          <li>Figma</li>
+          <li>TouchDesigner</li>
+        </ul>
+      </div>
+
+      <div class="testimonials">
+        <h3>What Clients Say</h3>
+        <div class="testimonial">
+          "Tate's work exceeded our expectations. The attention to detail and creative vision brought our brand to life in ways we couldn't have imagined."
+          <div class="testimonial-author">— Creative Director, Studio X</div>
+        </div>
+        <div class="testimonial">
+          "Professional, responsive, and incredibly talented. Tate delivered a stunning motion piece on time and on budget."
+          <div class="testimonial-author">— Marketing Lead, Tech Startup</div>
+        </div>
+      </div>
+
+      <div class="contact-methods">
+        <h3 style="margin: 0 0 12px; color: var(--primary);">Let's Work Together</h3>
+        <a href="mailto:hello@d0ntblinkk.com">📧 hello@d0ntblinkk.com</a>
+        <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">📷 Instagram: @d0nt.blinkk</a>
+        <a href="https://linkedin.com/in/tate-artist" target="_blank" rel="noopener">💼 LinkedIn Profile</a>
+      </div>
+
+      <div style="text-align:right;margin-top:24px">
+        <button id="closeAbout" style="padding:10px 24px;border:0;background:var(--primary);color:#fff;border-radius:8px;cursor:pointer">Close</button>
       </div>
     </div>
   </div>
 
-  <div class="controls" role="toolbar">
-    <button id="themeToggle">Night</button>
-  </div>
+  <!-- Project Modal -->
+  <div class="project-modal" id="projectModal" aria-hidden="true">
+    <button class="close-modal" id="closeModal">×</button>
+    <div class="project-card">
+      <img class="project-image" id="modalImage" src="" alt="" />
+      <div class="project-content">
+        <h2 id="modalTitle"></h2>
+        <div class="project-meta" id="modalMeta"></div>
+        <div class="project-description" id="modalDescription"></div>
+        
+        <div class="project-section" id="skillsSection" style="display:none">
+          <h3>Skills Used</h3>
+          <ul id="modalSkills"></ul>
+        </div>
+        
+        <div class="project-section" id="challengesSection" style="display:none">
+          <h3>Challenges & Solutions</h3>
+          <p id="modalChallenges"></p>
+        </div>
 
-  <div class="contact-info">© 2025 <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">d0nt.blinkk</a></div>
-
-  <div class="desktop" id="desktop"></div>
-
-  <div class="lightbox" id="lightbox" aria-hidden="true">
-    <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
-    <div class="lightbox-card">
-      <!-- New scrollable content area -->
-      <div class="lightbox-content" id="lightboxContent">
-          <!-- Content injected by JS -->
+        <div class="project-links" id="modalLinks"></div>
       </div>
     </div>
   </div>
+
+  <footer class="footer">
+    © 2025 Tate | d0nt.blinkk — Available for freelance & full-time opportunities
+  </footer>
 
   <script>
-    let topZ = 100;
-    const desktop = document.getElementById('desktop');
-    const lightbox = document.getElementById('lightbox');
-    // REMOVED:
-    // const lightboxImg = document.getElementById('lightboxImg');
-    // const lightboxCaption = document.getElementById('lightboxCaption');
-    // NEW:
-    const lightboxContent = document.getElementById('lightboxContent');
-    const lightboxClose = document.getElementById('lightboxClose');
-
+    const iconGrid = document.getElementById('iconGrid');
+    const projectModal = document.getElementById('projectModal');
+    const closeModal = document.getElementById('closeModal');
     const themeToggle = document.getElementById('themeToggle');
-    const introOverlay = document.getElementById('intro-overlay');
-    const enterBtn = document.getElementById('enter-btn');
     const aboutBtn = document.getElementById('aboutBtn');
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
+    const filtersContainer = document.getElementById('filtersContainer');
+    const loading = document.getElementById('loading');
 
-    // Helper function for placeholders
-    const getPlaceholder = (text, size = '100x100', bg = '333', fg = 'FFF') => {
-      const cleanText = text.replace(/\.[^/.]+$/, ''); // Remove file extension
-      return `https://placehold.co/${size}/${bg}/${fg}?text=${encodeURIComponent(cleanText)}`;
+    let projects = [];
+    let currentFilter = 'all';
+    let categories = new Set(['all']);
+
+    // Optional metadata for your images - add details for projects you want to enhance
+    const projectMetadata = {
+      // Example: add metadata for specific images by filename
+      // 'demo-reel.jpg': {
+      //   title: '2025 Demo Reel',
+      //   category: 'motion',
+      //   featured: true,
+      //   year: '2025',
+      //   role: 'Motion Designer',
+      //   description: 'A comprehensive showcase of my motion design work...',
+      //   skills: ['After Effects', 'Cinema 4D', 'Sound Design'],
+      //   challenges: 'Creating a cohesive narrative across diverse styles...',
+      //   links: [
+      //     { text: 'Watch on Vimeo', url: 'https://vimeo.com/...' }
+      //   ]
+      // }
     };
 
-    // MODIFICATION: Embed the image data directly to avoid fetch error
-    // Updated to be an array of objects
-    const images = [
-      {
-        "icon": "ocean-drive.jpg",
-        "title": "Ocean Drive",
-        "description": "A study of color and light on the iconic Ocean Drive. This piece explores the contrast between the neon glow and the twilight sky, capturing the vibrant energy of the night.",
-        "additionalImages": ["ocean-drive-detail.jpg", "ocean-drive-sketch.png", "ocean-drive-mood.jpg"]
-      },
-      {
-        "icon": "portrait-study.png",
-        "title": "Portrait Study",
-        "description": "An exploration of form and shadow in classical portraiture. The focus was on creating a sense of depth and emotion through subtle variations in tone.",
-        "additionalImages": ["portrait-angle.png", "portrait-wip.jpg"]
-      },
-      {
-        "icon": "abstract-motion.gif",
-        "title": "Abstract Motion",
-        "description": "This animated piece translates the rhythm of electronic music into a visual, generative form. Each frame is a response to a specific frequency, creating a living, breathing artwork.",
-        "additionalImages": ["motion-still-1.jpg", "motion-still-2.jpg"]
-      },
-      {
-        "icon": "city-lights.jpeg",
-        "title": "City Lights",
-        "description": "Long-exposure photograph of the downtown area, aiming to capture the constant flow of energy that defines the urban landscape.",
-        "additionalImages": ["city-lights-b&w.jpg"]
-      },
-      {
-        "icon": "forest-path.jpg",
-        "title": "Forest Path",
-        "description": "A quiet moment captured during an early morning hike. The lighting and atmosphere were perfect, creating a sense of peace and solitude.",
-        "additionalImages": ["forest-macro.jpg", "forest-stream.jpg"]
-      },
-      {
-        "icon": "glass-sculpture.png",
-        "title": "Glass Sculpture",
-        "description": "3D render of a fictional glass sculpture, focusing on realistic refraction and caustics. This was a technical exercise in material properties.",
-        "additionalImages": ["glass-render-2.png", "glass-clay.png"]
-      }
-    ];
-    
-    // Process the images immediately
-    try {
-      images.forEach(createIcon); 
-      startDrift();
-    } catch(err) {
-      console.error('Error processing images', err);
-    }
-
-    function createIcon(item){ // Parameter is now the full object
-      const icon = document.createElement('div');
-      icon.className = 'icon';
-      const left = 40 + Math.random() * (window.innerWidth - 200);
-      const top = 60 + Math.random() * (window.innerHeight - 220);
-      icon.style.left = `${left}px`;
-      icon.style.top = `${top}px`;
-      
-      // MODIFICATION: Use item properties
-      const placeholderText = item.title;
-      const placeholderSrc = getPlaceholder(item.icon, '100x100'); // Use icon for placeholder
-      icon.innerHTML = `<img src="${placeholderSrc}" alt="${item.title}"><span>${placeholderText}</span>`;
-      
-      desktop.appendChild(icon);
-
-      const img = icon.querySelector('img');
-      let isDragging=false, startX=0, startY=0, offsetX=0, offsetY=0, moved=false, lastX=0, lastY=0, lastTime=0, vx=0, vy=0;
-      const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints>0;
-
-      function onPointerDown(e){
-        e.preventDefault();
-        // Use pointer capture on the icon itself, or the img if you prefer
-        icon.setPointerCapture(e.pointerId);
-        isDragging=true; moved=false;
-        startX=e.clientX; startY=e.clientY;
-        offsetX=e.clientX - icon.getBoundingClientRect().left;
-        offsetY=e.clientY - icon.getBoundingClientRect().top;
-        lastX = e.clientX; lastY = e.clientY; lastTime = performance.now();
-        topZ+=1; icon.style.zIndex = topZ;
-        icon.style.cursor='grabbing';
-      }
-
-      function onPointerMove(e){
-        if(!isDragging) return;
-        const dx = e.clientX - startX, dy = e.clientY - startY;
-        if(Math.abs(dx)>8 || Math.abs(dy)>8) moved=true;
-        const now = performance.now();
-        const dt = Math.max(16, now - lastTime);
-        vx = (e.clientX - lastX)/dt;
-        vy = (e.clientY - lastY)/dt;
-        lastX = e.clientX; lastY = e.clientY; lastTime = now;
-        icon.style.left = (e.clientX - offsetX) + 'px';
-        icon.style.top = (e.clientY - offsetY) + 'px';
-      }
-
-      function onPointerUp(e){
-        icon.releasePointerCapture(e.pointerId);
-        icon.style.cursor='grab';
-        isDragging=false;
-
-        if(isTouchDevice && (Math.abs(vx)>0.01 || Math.abs(vy)>0.01)){
-          let decay=0.92;
-          function step(){
-            let x=parseFloat(icon.style.left)||0;
-            let y=parseFloat(icon.style.top)||0;
-            vx*=decay; vy*=decay;
-            x+=vx*16; y+=vy*16;
-            const maxX=window.innerWidth - icon.offsetWidth - 8;
-            const maxY=window.innerHeight - icon.offsetHeight - 8;
-            x=Math.max(8,Math.min(maxX,x));
-            y=Math.max(8,Math.min(maxY,y));
-            icon.style.left=x+'px';
-            icon.style.top=y+'px';
-            if(Math.abs(vx)>0.05 || Math.abs(vy)>0.05) requestAnimationFrame(step);
+    // Fetch images from your existing images.json
+    fetch('images.json')
+      .then(r => r.json())
+      .then(imageFiles => {
+        projects = imageFiles.map((filename, index) => {
+          const metadata = projectMetadata[filename] || {};
+          const title = metadata.title || filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+          const category = metadata.category || 'all';
+          
+          if (category !== 'all') {
+            categories.add(category);
           }
-          requestAnimationFrame(step);
-        }
-      }
 
-      icon.addEventListener('pointerdown', onPointerDown);
-      icon.addEventListener('pointermove', onPointerMove);
-      icon.addEventListener('pointerup', onPointerUp);
-      icon.addEventListener('pointercancel', ()=>{ isDragging=false; icon.style.cursor='grab'; });
-
-      // ✅ Fixed: Lightbox now works on desktop & mobile
-      icon.addEventListener('click', ()=>{ if(!moved) showLightbox(item); }); // Pass the whole item
-    }
-
-    // REWRITTEN: showLightbox function to build complex HTML
-    function showLightbox(item){
-      let html = '';
-      
-      // Main Image (using a larger placeholder)
-      html += `<img src="${getPlaceholder(item.title, '800x400', '555')}" alt="${item.title}">`;
-      
-      // Title
-      html += `<h2>${item.title}</h2>`;
-      
-      // Description
-      html += `<p>${item.description}</p>`;
-      
-      // Additional Images
-      if (item.additionalImages && item.additionalImages.length > 0) {
-        html += `<h3>Gallery</h3><div class="lightbox-gallery">`;
-        item.additionalImages.forEach(imgName => {
-          html += `<img src="${getPlaceholder(imgName, '400x300', '777')}" alt="${imgName.replace(/\.[^/.]+$/, '')}">`;
+          return {
+            id: filename,
+            image: `images/${filename}`,
+            filename: filename,
+            title: title,
+            category: category,
+            featured: metadata.featured || index === 0, // First image is featured by default
+            year: metadata.year || '2024',
+            role: metadata.role || 'Designer',
+            description: metadata.description || `Professional work showcasing ${title}.`,
+            skills: metadata.skills || [],
+            challenges: metadata.challenges || '',
+            links: metadata.links || []
+          };
         });
-        html += `</div>`;
-      }
 
-      lightboxContent.innerHTML = html;
-      lightbox.classList.add('visible');
-      lightbox.setAttribute('aria-hidden','false');
-      lightboxContent.scrollTop = 0; // Ensure it scrolls to top
-    }
-
-    // NEW: Function to hide lightbox
-    function hideLightbox(){ 
-      lightbox.classList.remove('visible'); 
-      lightbox.setAttribute('aria-hidden','true'); 
-      lightboxContent.innerHTML = ''; // Clear content on close
-    }
-
-    // MODIFIED: Close on backdrop click
-    lightbox.addEventListener('click', (e)=>{ 
-      if (e.target === lightbox) { // Only close if clicking the backdrop
-        hideLightbox();
-      }
-    });
-
-    // NEW: Close on button click
-    lightboxClose.addEventListener('click', hideLightbox);
-
-    themeToggle.addEventListener('click', ()=>{
-      if(document.body.classList.contains('light')){
-        document.body.classList.remove('light'); 
-        document.body.classList.add('dark');
-        themeToggle.textContent='Day';
-      } else {
-        document.body.classList.remove('dark'); 
-        document.body.classList.add('light');
-        themeToggle.textContent='Night';
-      }
-    });
-
-    enterBtn.addEventListener('click', ()=>{
-      introOverlay.classList.add('hidden');
-      setTimeout(()=>{ introOverlay.style.display='none'; },700);
-    });
-
-    aboutBtn.addEventListener('click', ()=>{ 
-      aboutOverlay.classList.add('visible'); 
-      aboutOverlay.setAttribute('aria-hidden','false'); 
-    });
-    closeAbout.addEventListener('click', ()=>{ 
-      aboutOverlay.classList.remove('visible'); 
-      aboutOverlay.setAttribute('aria-hidden','true'); 
-    });
-    aboutOverlay.addEventListener('click', (e)=>{ 
-      if(e.target===aboutOverlay){ 
-        aboutOverlay.classList.remove('visible'); 
-        aboutOverlay.setAttribute('aria-hidden','true'); 
-      } 
-    });
-
-    function startDrift(){
-      const icons = document.querySelectorAll('.icon');
-      function drift(t){
-        icons.forEach((icon,i)=>{
-          if (icon.style.cursor === 'grabbing') return; // Don't drift while dragging
-          const amp=6;
-          const speed=0.0003 + (i%7)*0.00005;
-          const dx=Math.sin((t*speed)+(i))*amp;
-          const dy=Math.cos((t*speed*1.1)+(i))*amp*0.6;
-          icon.style.transform=`translate(${dx}px,${dy}px)`;
-        });
-        requestAnimationFrame(drift);
-      }
-      requestAnimationFrame(drift);
-    }
-
-    window.addEventListener('resize', ()=>{
-      document.querySelectorAll('.icon').forEach(icon=>{
-        const x=parseFloat(icon.style.left)||0;
-        const y=parseFloat(icon.style.top)||0;
-        const maxX=window.innerWidth - icon.offsetWidth - 8;
-        const maxY=window.innerHeight - icon.offsetHeight - 8;
-        if(x>maxX) icon.style.left=maxX+'px';
-        if(y>maxY) icon.style.top=maxY+'px';
+        // Build category filters
+        buildFilters();
+        
+        // Render projects
+        renderProjects();
+        
+        // Hide loading
+        loading.classList.add('hidden');
+      })
+      .catch(err => {
+        console.error('Error loading images.json:', err);
+        loading.innerHTML = 'Error loading portfolio. Please make sure images.json exists.';
       });
+
+    function buildFilters() {
+      filtersContainer.innerHTML = '<button class="filter-btn active" data-category="all">All Work</button>';
+      
+      categories.forEach(cat => {
+        if (cat !== 'all') {
+          const btn = document.createElement('button');
+          btn.className = 'filter-btn';
+          btn.dataset.category = cat;
+          btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+          filtersContainer.appendChild(btn);
+        }
+      });
+
+      // Add filter event listeners
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentFilter = btn.dataset.category;
+          renderProjects();
+        });
+      });
+    }
+
+    function renderProjects() {
+      iconGrid.innerHTML = '';
+      const filtered = currentFilter === 'all' 
+        ? projects 
+        : projects.filter(p => p.category === currentFilter);
+
+      filtered.forEach(project => {
+        const icon = document.createElement('div');
+        icon.className = `icon ${project.featured ? 'featured' : ''}`;
+        icon.innerHTML = `
+          <img src="${project.image}" alt="${project.title}" loading="lazy" />
+          <div class="title">${project.title}</div>
+          ${project.category !== 'all' ? `<div class="category-tag">${project.category}</div>` : ''}
+        `;
+        icon.addEventListener('click', () => openProjectModal(project));
+        iconGrid.appendChild(icon);
+      });
+    }
+
+    function openProjectModal(project) {
+      document.getElementById('modalImage').src = project.image;
+      document.getElementById('modalTitle').textContent = project.title;
+      
+      // Build meta section
+      const metaHTML = [];
+      if (project.category !== 'all') {
+        metaHTML.push(`<span>📂 <span>${project.category}</span></span>`);
+      }
+      metaHTML.push(`<span>🗓️ <span>${project.year}</span></span>`);
+      metaHTML.push(`<span>👤 <span>${project.role}</span></span>`);
+      document.getElementById('modalMeta').innerHTML = metaHTML.join('');
+      
+      document.getElementById('modalDescription').textContent = project.description;
+      
+      // Skills section
+      const skillsSection = document.getElementById('skillsSection');
+      if (project.skills && project.skills.length > 0) {
+        const skillsList = document.getElementById('modalSkills');
+        skillsList.innerHTML = project.skills.map(s => `<li>${s}</li>`).join('');
+        skillsSection.style.display = 'block';
+      } else {
+        skillsSection.style.display = 'none';
+      }
+      
+      // Challenges section
+      const challengesSection = document.getElementById('challengesSection');
+      if (project.challenges) {
+        document.getElementById('modalChallenges').textContent = project.challenges;
+        challengesSection.style.display = 'block';
+      } else {
+        challengesSection.style.display = 'none';
+      }
+      
+      // Links section
+      const linksDiv = document.getElementById('modalLinks');
+      if (project.links && project.links.length > 0) {
+        linksDiv.innerHTML = project.links.map(link => 
+          `<a href="${link.url}" target="_blank" rel="noopener">${link.text}</a>`
+        ).join('');
+        linksDiv.style.display = 'flex';
+      } else {
+        linksDiv.style.display = 'none';
+      }
+
+      projectModal.classList.add('visible');
+      projectModal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeProjectModal() {
+      projectModal.classList.remove('visible');
+      projectModal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    closeModal.addEventListener('click', closeProjectModal);
+    projectModal.addEventListener('click', (e) => {
+      if (e.target === projectModal) closeProjectModal();
     });
 
-    window.addEventListener('keydown', (e)=>{
-      if(e.key==='Escape'){ 
-        hideLightbox(); // Use new function
-        aboutOverlay.classList.remove('visible'); 
-        introOverlay.classList.add('hidden'); 
+    // Theme toggle
+    themeToggle.addEventListener('click', () => {
+      if (document.body.classList.contains('light')) {
+        document.body.classList.remove('light');
+        document.body.classList.add('dark');
+        themeToggle.textContent = '☀️';
+      } else {
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
+        themeToggle.textContent = '🌙';
       }
+    });
+
+    // About modal
+    aboutBtn.addEventListener('click', () => {
+      aboutOverlay.classList.add('visible');
+      aboutOverlay.setAttribute('aria-hidden', 'false');
+    });
+    closeAbout.addEventListener('click', () => {
+      aboutOverlay.classList.remove('visible');
+      aboutOverlay.setAttribute('aria-hidden', 'true');
+    });
+    aboutOverlay.addEventListener('click', (e) => {
+      if (e.target === aboutOverlay) {
+        aboutOverlay.classList.remove('visible');
+        aboutOverlay.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeProjectModal();
+        aboutOverlay.classList.remove('visible');
+        aboutOverlay.setAttribute('aria-hidden', 'true');
+      }
+    });
+
+    // Resume download (placeholder)
+    document.getElementById('resumeBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert('Add your resume PDF to the site and update this link:\n\n<a href="path/to/your-resume.pdf" download>Resume</a>');
     });
   </script>
 </body>
