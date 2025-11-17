@@ -46,11 +46,114 @@
       .icon span{font-size:10px}
     }
 
-    .lightbox{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+    .lightbox{display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;}
     .lightbox.visible{display:flex}
-    .lightbox-card{max-width:92%;max-height:92%;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;align-items:center}
-    .lightbox-card img{max-width:100%;max-height:80vh;border-radius:10px;display:block}
-    .lightbox-caption{padding:10px 14px;font-size:13px;color:var(--accent);background:rgba(0,0,0,.12);width:100%;text-align:center}
+    
+    /* Updated Lightbox Card styles for scrolling content */
+    .lightbox-card{
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    
+    /* New scrollable content area */
+    .lightbox-content {
+      padding: 24px 32px;
+      overflow-y: auto;
+      flex-grow: 1;
+      color: #111;
+    }
+
+    /* New styles for content *inside* the scrollable area */
+    .lightbox-content img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .lightbox-content h2 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      color: #000;
+      font-family: "IBM Plex Mono", monospace;
+    }
+
+    .lightbox-content p {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; /* More readable font */
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      color: #333;
+    }
+
+    /* New container for additional images */
+    .lightbox-content h3 {
+      font-family: "IBM Plex Mono", monospace;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    .lightbox-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .lightbox-gallery img {
+      margin-bottom: 0;
+      border: 1px solid #eee;
+    }
+
+    /* New Close Button */
+    .lightbox-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3010; /* Above card */
+        background: rgba(0,0,0,.3);
+        color: #fff;
+        border: 0;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        font-size: 22px;
+        cursor: pointer;
+        line-height: 36px;
+        text-align: center;
+        transition: background .2s var(--ease);
+    }
+    .lightbox-close:hover {
+      background: rgba(0,0,0,.6);
+    }
+
+    /* Dark mode for new lightbox */
+    body.dark .lightbox-card {
+      background: #1b2030;
+    }
+    body.dark .lightbox-content {
+      color: #f3f4f8;
+    }
+    body.dark .lightbox-content h2 {
+      color: #fff;
+    }
+    body.dark .lightbox-content p {
+      color: #ccc;
+    }
+    body.dark .lightbox-content h3 {
+      border-color: #333;
+    }
+    body.dark .lightbox-gallery img {
+      border-color: #333;
+    }
+
+    /* Remove old/conflicting styles */
+    .lightbox-caption{display: none;}
 
     #intro-overlay{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s var(--ease)}
     #intro-overlay.hidden{opacity:0;pointer-events:none;display:block}
@@ -109,9 +212,12 @@
   <div class="desktop" id="desktop"></div>
 
   <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">&times;</button>
     <div class="lightbox-card">
-      <img id="lightboxImg" src="" alt="preview" />
-      <div class="lightbox-caption" id="lightboxCaption"></div>
+      <!-- New scrollable content area -->
+      <div class="lightbox-content" id="lightboxContent">
+          <!-- Content injected by JS -->
+      </div>
     </div>
   </div>
 
@@ -119,8 +225,13 @@
     let topZ = 100;
     const desktop = document.getElementById('desktop');
     const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-    const lightboxCaption = document.getElementById('lightboxCaption');
+    // REMOVED:
+    // const lightboxImg = document.getElementById('lightboxImg');
+    // const lightboxCaption = document.getElementById('lightboxCaption');
+    // NEW:
+    const lightboxContent = document.getElementById('lightboxContent');
+    const lightboxClose = document.getElementById('lightboxClose');
+
     const themeToggle = document.getElementById('themeToggle');
     const introOverlay = document.getElementById('intro-overlay');
     const enterBtn = document.getElementById('enter-btn');
@@ -128,19 +239,74 @@
     const aboutOverlay = document.getElementById('aboutOverlay');
     const closeAbout = document.getElementById('closeAbout');
 
-    fetch('images.json')
-      .then(r=>r.json())
-      .then(images=>{ images.forEach(createIcon); startDrift(); })
-      .catch(err=>{ console.error('images.json load error',err); });
+    // Helper function for placeholders
+    const getPlaceholder = (text, size = '100x100', bg = '333', fg = 'FFF') => {
+      const cleanText = text.replace(/\.[^/.]+$/, ''); // Remove file extension
+      return `https://placehold.co/${size}/${bg}/${fg}?text=${encodeURIComponent(cleanText)}`;
+    };
 
-    function createIcon(filename){
+    // MODIFICATION: Embed the image data directly to avoid fetch error
+    // Updated to be an array of objects
+    const images = [
+      {
+        "icon": "ocean-drive.jpg",
+        "title": "Ocean Drive",
+        "description": "A study of color and light on the iconic Ocean Drive. This piece explores the contrast between the neon glow and the twilight sky, capturing the vibrant energy of the night.",
+        "additionalImages": ["ocean-drive-detail.jpg", "ocean-drive-sketch.png", "ocean-drive-mood.jpg"]
+      },
+      {
+        "icon": "portrait-study.png",
+        "title": "Portrait Study",
+        "description": "An exploration of form and shadow in classical portraiture. The focus was on creating a sense of depth and emotion through subtle variations in tone.",
+        "additionalImages": ["portrait-angle.png", "portrait-wip.jpg"]
+      },
+      {
+        "icon": "abstract-motion.gif",
+        "title": "Abstract Motion",
+        "description": "This animated piece translates the rhythm of electronic music into a visual, generative form. Each frame is a response to a specific frequency, creating a living, breathing artwork.",
+        "additionalImages": ["motion-still-1.jpg", "motion-still-2.jpg"]
+      },
+      {
+        "icon": "city-lights.jpeg",
+        "title": "City Lights",
+        "description": "Long-exposure photograph of the downtown area, aiming to capture the constant flow of energy that defines the urban landscape.",
+        "additionalImages": ["city-lights-b&w.jpg"]
+      },
+      {
+        "icon": "forest-path.jpg",
+        "title": "Forest Path",
+        "description": "A quiet moment captured during an early morning hike. The lighting and atmosphere were perfect, creating a sense of peace and solitude.",
+        "additionalImages": ["forest-macro.jpg", "forest-stream.jpg"]
+      },
+      {
+        "icon": "glass-sculpture.png",
+        "title": "Glass Sculpture",
+        "description": "3D render of a fictional glass sculpture, focusing on realistic refraction and caustics. This was a technical exercise in material properties.",
+        "additionalImages": ["glass-render-2.png", "glass-clay.png"]
+      }
+    ];
+    
+    // Process the images immediately
+    try {
+      images.forEach(createIcon); 
+      startDrift();
+    } catch(err) {
+      console.error('Error processing images', err);
+    }
+
+    function createIcon(item){ // Parameter is now the full object
       const icon = document.createElement('div');
       icon.className = 'icon';
       const left = 40 + Math.random() * (window.innerWidth - 200);
       const top = 60 + Math.random() * (window.innerHeight - 220);
       icon.style.left = `${left}px`;
       icon.style.top = `${top}px`;
-      icon.innerHTML = `<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/,'')}</span>`;
+      
+      // MODIFICATION: Use item properties
+      const placeholderText = item.title;
+      const placeholderSrc = getPlaceholder(item.icon, '100x100'); // Use icon for placeholder
+      icon.innerHTML = `<img src="${placeholderSrc}" alt="${item.title}"><span>${placeholderText}</span>`;
+      
       desktop.appendChild(icon);
 
       const img = icon.querySelector('img');
@@ -149,7 +315,8 @@
 
       function onPointerDown(e){
         e.preventDefault();
-        img.setPointerCapture(e.pointerId);
+        // Use pointer capture on the icon itself, or the img if you prefer
+        icon.setPointerCapture(e.pointerId);
         isDragging=true; moved=false;
         startX=e.clientX; startY=e.clientY;
         offsetX=e.clientX - icon.getBoundingClientRect().left;
@@ -173,7 +340,7 @@
       }
 
       function onPointerUp(e){
-        img.releasePointerCapture(e.pointerId);
+        icon.releasePointerCapture(e.pointerId);
         icon.style.cursor='grab';
         isDragging=false;
 
@@ -202,20 +369,53 @@
       icon.addEventListener('pointercancel', ()=>{ isDragging=false; icon.style.cursor='grab'; });
 
       // ✅ Fixed: Lightbox now works on desktop & mobile
-      icon.addEventListener('click', ()=>{ if(!moved) showLightbox(img.src, filename); });
+      icon.addEventListener('click', ()=>{ if(!moved) showLightbox(item); }); // Pass the whole item
     }
 
-    function showLightbox(src, filename){
-      lightboxImg.src = src;
-      lightboxCaption.textContent = filename.replace(/\.[^/.]+$/,'');
+    // REWRITTEN: showLightbox function to build complex HTML
+    function showLightbox(item){
+      let html = '';
+      
+      // Main Image (using a larger placeholder)
+      html += `<img src="${getPlaceholder(item.title, '800x400', '555')}" alt="${item.title}">`;
+      
+      // Title
+      html += `<h2>${item.title}</h2>`;
+      
+      // Description
+      html += `<p>${item.description}</p>`;
+      
+      // Additional Images
+      if (item.additionalImages && item.additionalImages.length > 0) {
+        html += `<h3>Gallery</h3><div class="lightbox-gallery">`;
+        item.additionalImages.forEach(imgName => {
+          html += `<img src="${getPlaceholder(imgName, '400x300', '777')}" alt="${imgName.replace(/\.[^/.]+$/, '')}">`;
+        });
+        html += `</div>`;
+      }
+
+      lightboxContent.innerHTML = html;
       lightbox.classList.add('visible');
       lightbox.setAttribute('aria-hidden','false');
+      lightboxContent.scrollTop = 0; // Ensure it scrolls to top
     }
 
-    lightbox.addEventListener('click', ()=>{ 
+    // NEW: Function to hide lightbox
+    function hideLightbox(){ 
       lightbox.classList.remove('visible'); 
       lightbox.setAttribute('aria-hidden','true'); 
+      lightboxContent.innerHTML = ''; // Clear content on close
+    }
+
+    // MODIFIED: Close on backdrop click
+    lightbox.addEventListener('click', (e)=>{ 
+      if (e.target === lightbox) { // Only close if clicking the backdrop
+        hideLightbox();
+      }
     });
+
+    // NEW: Close on button click
+    lightboxClose.addEventListener('click', hideLightbox);
 
     themeToggle.addEventListener('click', ()=>{
       if(document.body.classList.contains('light')){
@@ -253,6 +453,7 @@
       const icons = document.querySelectorAll('.icon');
       function drift(t){
         icons.forEach((icon,i)=>{
+          if (icon.style.cursor === 'grabbing') return; // Don't drift while dragging
           const amp=6;
           const speed=0.0003 + (i%7)*0.00005;
           const dx=Math.sin((t*speed)+(i))*amp;
@@ -277,7 +478,7 @@
 
     window.addEventListener('keydown', (e)=>{
       if(e.key==='Escape'){ 
-        lightbox.classList.remove('visible'); 
+        hideLightbox(); // Use new function
         aboutOverlay.classList.remove('visible'); 
         introOverlay.classList.add('hidden'); 
       }
