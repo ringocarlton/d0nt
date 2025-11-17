@@ -25,43 +25,43 @@
       left: 0;
       right: 0;
       z-index: 2500;
-      padding: 16px 24px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid rgba(0,0,0,0.08);
     }
     body.dark .header {
-      background: rgba(15,18,32,0.9);
+      background: rgba(15,18,32,0.92);
       border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     .header-left h1 {
       margin: 0;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 600;
     }
     .header-left p {
       margin: 2px 0 0;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       opacity: 0.7;
     }
     .header-right {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
     .header-right button, .header-right a {
-      padding: 8px 16px;
+      padding: 7px 14px;
       border: 0;
       background: var(--primary);
       color: #fff;
       border-radius: 8px;
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       text-decoration: none;
       transition: transform 0.2s var(--ease), background 0.2s var(--ease);
       white-space: nowrap;
@@ -73,7 +73,7 @@
     .theme-btn {
       background: rgba(0,0,0,0.1) !important;
       color: inherit !important;
-      padding: 8px 12px !important;
+      padding: 7px 11px !important;
     }
     body.dark .theme-btn {
       background: rgba(255,255,255,0.1) !important;
@@ -92,43 +92,89 @@
     }
     .loading.hidden { display: none; }
 
-    /* Desktop Area */
+    /* Desktop - Floating Icons */
     .desktop{
       position: relative;
       width: 100vw;
       height: 100vh;
-      padding-top: 80px;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow: hidden;
+      transition: background 0.45s var(--ease);
     }
 
-    /* Category Filters */
-    .filters {
-      position: sticky;
-      top: 80px;
-      z-index: 2000;
-      padding: 16px 24px;
+    .icon{
+      position: absolute;
+      width: 100px;
+      text-align: center;
+      user-select: none;
+      cursor: grab;
+      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+      -webkit-tap-highlight-color: transparent;
       display: flex;
-      gap: 10px;
-      background: rgba(255,255,255,0.75);
-      backdrop-filter: blur(8px);
-      border-bottom: 1px solid rgba(0,0,0,0.06);
-      flex-wrap: wrap;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 100;
+    }
+    .icon img{
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      object-fit: cover;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      will-change: left, top, transform;
+      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
+      display: block;
+    }
+    .icon span{
+      font-size: 11px;
+      color: inherit;
+      max-width: 110px;
+      word-break: break-word;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .icon:hover img{
+      transform: scale(1.05);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
+    }
+    .icon.grabbing {
+      cursor: grabbing;
+    }
+
+    @media (max-width:768px){
+      .icon, .icon img{width: 80px; height: 80px}
+      .icon span{font-size: 10px}
+    }
+
+    /* Category Filters - Floating */
+    .filters {
+      position: fixed;
+      top: 70px;
+      left: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
     }
     body.dark .filters {
-      background: rgba(20,25,35,0.8);
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(20,25,35,0.88);
     }
     .filter-btn {
-      padding: 6px 14px;
-      border: 1px solid rgba(0,0,0,0.2);
+      padding: 6px 12px;
+      border: 1px solid rgba(0,0,0,0.15);
       background: transparent;
       color: inherit;
       border-radius: 20px;
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       transition: all 0.2s var(--ease);
+      text-align: left;
+      white-space: nowrap;
     }
     .filter-btn:hover {
       background: rgba(0,0,0,0.05);
@@ -142,65 +188,13 @@
       background: rgba(255,255,255,0.1);
     }
 
-    /* Icon Grid */
-    .icon-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 24px;
-      padding: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
     @media (max-width: 768px) {
-      .icon-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 16px;
-        padding: 16px;
-      }
-    }
-
-    .icon{
-      text-align: center;
-      cursor: pointer;
-      transition: transform 0.2s var(--ease);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-    .icon:hover {
-      transform: translateY(-4px);
-    }
-    .icon img{
-      width: 100%;
-      aspect-ratio: 1;
-      border-radius: 12px;
-      object-fit: cover;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-      transition: box-shadow 0.2s var(--ease);
-    }
-    .icon:hover img{
-      box-shadow: 0 8px 22px rgba(0,0,0,0.25);
-    }
-    .icon .title {
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-top: 4px;
-    }
-    .icon .category-tag {
-      font-size: 0.7rem;
-      opacity: 0.6;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .icon.featured {
-      grid-column: span 2;
-      grid-row: span 2;
-    }
-    @media (max-width: 768px) {
-      .icon.featured {
-        grid-column: span 1;
-        grid-row: span 1;
+      .filters {
+        flex-direction: row;
+        flex-wrap: wrap;
+        left: 10px;
+        right: 10px;
+        top: 60px;
       }
     }
 
@@ -210,8 +204,8 @@
       position: fixed;
       inset: 0;
       z-index: 4000;
-      background: rgba(0,0,0,0.85);
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(10px);
       align-items: center;
       justify-content: center;
       padding: 20px;
@@ -219,28 +213,43 @@
     }
     .project-modal.visible { display: flex; }
     .project-card {
-      max-width: 900px;
+      max-width: 1000px;
       width: 100%;
       background: #fff;
       border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      animation: slideUp 0.3s var(--ease);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      animation: slideUp 0.35s var(--ease);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
     }
     body.dark .project-card {
       background: #1a1d28;
     }
     @keyframes slideUp {
-      from { transform: translateY(30px); opacity: 0; }
+      from { transform: translateY(40px); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
+    }
+    .project-image-container {
+      width: 100%;
+      max-height: 500px;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .project-image {
       width: 100%;
-      max-height: 400px;
-      object-fit: cover;
+      height: auto;
+      max-height: 500px;
+      object-fit: contain;
+      display: block;
     }
     .project-content {
       padding: 28px;
+      overflow-y: auto;
     }
     .project-content h2 {
       margin: 0 0 8px;
@@ -306,7 +315,7 @@
       width: 40px;
       height: 40px;
       border: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       color: #fff;
       border-radius: 50%;
       cursor: pointer;
@@ -315,9 +324,10 @@
       align-items: center;
       justify-content: center;
       transition: background 0.2s var(--ease);
+      z-index: 10;
     }
     .close-modal:hover {
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
     }
 
     /* About/Contact Overlay */
@@ -327,7 +337,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       z-index: 4500;
       padding: 20px;
     }
@@ -339,7 +349,7 @@
       color: #000;
       padding: 32px;
       border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
       max-height: 90vh;
       overflow-y: auto;
     }
@@ -433,35 +443,36 @@
       bottom: 0;
       left: 0;
       right: 0;
-      padding: 16px 24px;
+      padding: 12px 20px;
       text-align: center;
-      font-size: 0.85rem;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
+      font-size: 0.8rem;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(12px);
       border-top: 1px solid rgba(0,0,0,0.08);
       z-index: 2000;
+      opacity: 0.9;
     }
     body.dark .footer {
-      background: rgba(15,18,32,0.9);
+      background: rgba(15,18,32,0.92);
       border-top: 1px solid rgba(255,255,255,0.1);
     }
 
     @media (max-width: 768px) {
       .header {
-        padding: 12px 16px;
+        padding: 10px 14px;
       }
       .header-left h1 {
         font-size: 1rem;
       }
       .header-left p {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
       }
       .header-right {
         gap: 6px;
       }
       .header-right button, .header-right a {
         padding: 6px 10px;
-        font-size: 0.8rem;
+        font-size: 0.75rem;
       }
       .project-content {
         padding: 20px;
@@ -471,6 +482,10 @@
       }
       .about-card {
         padding: 24px;
+      }
+      .footer {
+        font-size: 0.7rem;
+        padding: 10px;
       }
     }
   </style>
@@ -491,15 +506,13 @@
     </div>
   </header>
 
-  <!-- Category Filters -->
+  <!-- Category Filters - Floating -->
   <div class="filters" id="filtersContainer">
     <button class="filter-btn active" data-category="all">All Work</button>
   </div>
 
-  <!-- Desktop/Grid Area -->
-  <div class="desktop" id="desktop">
-    <div class="icon-grid" id="iconGrid"></div>
-  </div>
+  <!-- Desktop - Draggable Icons -->
+  <div class="desktop" id="desktop"></div>
 
   <!-- About/Contact Overlay -->
   <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
@@ -553,7 +566,9 @@
   <div class="project-modal" id="projectModal" aria-hidden="true">
     <button class="close-modal" id="closeModal">×</button>
     <div class="project-card">
-      <img class="project-image" id="modalImage" src="" alt="" />
+      <div class="project-image-container">
+        <img class="project-image" id="modalImage" src="" alt="" />
+      </div>
       <div class="project-content">
         <h2 id="modalTitle"></h2>
         <div class="project-meta" id="modalMeta"></div>
@@ -579,7 +594,8 @@
   </footer>
 
   <script>
-    const iconGrid = document.getElementById('iconGrid');
+    let topZ = 100;
+    const desktop = document.getElementById('desktop');
     const projectModal = document.getElementById('projectModal');
     const closeModal = document.getElementById('closeModal');
     const themeToggle = document.getElementById('themeToggle');
@@ -593,13 +609,12 @@
     let currentFilter = 'all';
     let categories = new Set(['all']);
 
-    // Optional metadata for your images - add details for projects you want to enhance
+    // Optional metadata for your images
     const projectMetadata = {
-      // Example: add metadata for specific images by filename
+      // Example: Uncomment and customize for your actual projects
       // 'demo-reel.jpg': {
       //   title: '2025 Demo Reel',
       //   category: 'motion',
-      //   featured: true,
       //   year: '2025',
       //   role: 'Motion Designer',
       //   description: 'A comprehensive showcase of my motion design work...',
@@ -611,7 +626,7 @@
       // }
     };
 
-    // Fetch images from your existing images.json
+    // Fetch images from images.json
     fetch('images.json')
       .then(r => r.json())
       .then(imageFiles => {
@@ -630,7 +645,6 @@
             filename: filename,
             title: title,
             category: category,
-            featured: metadata.featured || index === 0, // First image is featured by default
             year: metadata.year || '2024',
             role: metadata.role || 'Designer',
             description: metadata.description || `Professional work showcasing ${title}.`,
@@ -640,13 +654,9 @@
           };
         });
 
-        // Build category filters
         buildFilters();
-        
-        // Render projects
-        renderProjects();
-        
-        // Hide loading
+        createIcons();
+        startDrift();
         loading.classList.add('hidden');
       })
       .catch(err => {
@@ -667,33 +677,118 @@
         }
       });
 
-      // Add filter event listeners
       document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentFilter = btn.dataset.category;
-          renderProjects();
+          filterIcons();
         });
       });
     }
 
-    function renderProjects() {
-      iconGrid.innerHTML = '';
-      const filtered = currentFilter === 'all' 
-        ? projects 
-        : projects.filter(p => p.category === currentFilter);
-
-      filtered.forEach(project => {
+    function createIcons() {
+      projects.forEach(project => {
         const icon = document.createElement('div');
-        icon.className = `icon ${project.featured ? 'featured' : ''}`;
-        icon.innerHTML = `
-          <img src="${project.image}" alt="${project.title}" loading="lazy" />
-          <div class="title">${project.title}</div>
-          ${project.category !== 'all' ? `<div class="category-tag">${project.category}</div>` : ''}
-        `;
-        icon.addEventListener('click', () => openProjectModal(project));
-        iconGrid.appendChild(icon);
+        icon.className = 'icon';
+        icon.dataset.category = project.category;
+        
+        const left = 60 + Math.random() * (window.innerWidth - 240);
+        const top = 100 + Math.random() * (window.innerHeight - 280);
+        icon.style.left = `${left}px`;
+        icon.style.top = `${top}px`;
+        
+        icon.innerHTML = `<img src="${project.image}" alt="${project.title}"><span>${project.title}</span>`;
+        desktop.appendChild(icon);
+
+        const img = icon.querySelector('img');
+        let isDragging = false, startX = 0, startY = 0, offsetX = 0, offsetY = 0, moved = false;
+        let lastX = 0, lastY = 0, lastTime = 0, vx = 0, vy = 0;
+        const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+        function onPointerDown(e) {
+          e.preventDefault();
+          img.setPointerCapture(e.pointerId);
+          isDragging = true;
+          moved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          offsetX = e.clientX - icon.getBoundingClientRect().left;
+          offsetY = e.clientY - icon.getBoundingClientRect().top;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          lastTime = performance.now();
+          topZ += 1;
+          icon.style.zIndex = topZ;
+          icon.classList.add('grabbing');
+        }
+
+        function onPointerMove(e) {
+          if (!isDragging) return;
+          const dx = e.clientX - startX, dy = e.clientY - startY;
+          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+          
+          const now = performance.now();
+          const dt = Math.max(16, now - lastTime);
+          vx = (e.clientX - lastX) / dt;
+          vy = (e.clientY - lastY) / dt;
+          lastX = e.clientX;
+          lastY = e.clientY;
+          lastTime = now;
+          
+          icon.style.left = (e.clientX - offsetX) + 'px';
+          icon.style.top = (e.clientY - offsetY) + 'px';
+        }
+
+        function onPointerUp(e) {
+          img.releasePointerCapture(e.pointerId);
+          icon.classList.remove('grabbing');
+          isDragging = false;
+
+          if (isTouchDevice && (Math.abs(vx) > 0.01 || Math.abs(vy) > 0.01)) {
+            let decay = 0.92;
+            function step() {
+              let x = parseFloat(icon.style.left) || 0;
+              let y = parseFloat(icon.style.top) || 0;
+              vx *= decay;
+              vy *= decay;
+              x += vx * 16;
+              y += vy * 16;
+              const maxX = window.innerWidth - icon.offsetWidth - 8;
+              const maxY = window.innerHeight - icon.offsetHeight - 8;
+              x = Math.max(8, Math.min(maxX, x));
+              y = Math.max(8, Math.min(maxY, y));
+              icon.style.left = x + 'px';
+              icon.style.top = y + 'px';
+              if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+          }
+        }
+
+        icon.addEventListener('pointerdown', onPointerDown);
+        icon.addEventListener('pointermove', onPointerMove);
+        icon.addEventListener('pointerup', onPointerUp);
+        icon.addEventListener('pointercancel', () => {
+          isDragging = false;
+          icon.classList.remove('grabbing');
+        });
+
+        icon.addEventListener('click', () => {
+          if (!moved) openProjectModal(project);
+        });
+      });
+    }
+
+    function filterIcons() {
+      const icons = document.querySelectorAll('.icon');
+      icons.forEach(icon => {
+        const category = icon.dataset.category;
+        if (currentFilter === 'all' || category === currentFilter) {
+          icon.style.display = 'flex';
+        } else {
+          icon.style.display = 'none';
+        }
       });
     }
 
@@ -701,7 +796,6 @@
       document.getElementById('modalImage').src = project.image;
       document.getElementById('modalTitle').textContent = project.title;
       
-      // Build meta section
       const metaHTML = [];
       if (project.category !== 'all') {
         metaHTML.push(`<span>📂 <span>${project.category}</span></span>`);
@@ -712,7 +806,6 @@
       
       document.getElementById('modalDescription').textContent = project.description;
       
-      // Skills section
       const skillsSection = document.getElementById('skillsSection');
       if (project.skills && project.skills.length > 0) {
         const skillsList = document.getElementById('modalSkills');
@@ -722,7 +815,6 @@
         skillsSection.style.display = 'none';
       }
       
-      // Challenges section
       const challengesSection = document.getElementById('challengesSection');
       if (project.challenges) {
         document.getElementById('modalChallenges').textContent = project.challenges;
@@ -731,7 +823,6 @@
         challengesSection.style.display = 'none';
       }
       
-      // Links section
       const linksDiv = document.getElementById('modalLinks');
       if (project.links && project.links.length > 0) {
         linksDiv.innerHTML = project.links.map(link => 
@@ -787,6 +878,35 @@
       }
     });
 
+    // Drift animation
+    function startDrift() {
+      const icons = document.querySelectorAll('.icon');
+      function drift(t) {
+        icons.forEach((icon, i) => {
+          if (icon.style.display === 'none') return;
+          const amp = 6;
+          const speed = 0.0003 + (i % 7) * 0.00005;
+          const dx = Math.sin((t * speed) + (i)) * amp;
+          const dy = Math.cos((t * speed * 1.1) + (i)) * amp * 0.6;
+          icon.style.transform = `translate(${dx}px, ${dy}px)`;
+        });
+        requestAnimationFrame(drift);
+      }
+      requestAnimationFrame(drift);
+    }
+
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      document.querySelectorAll('.icon').forEach(icon => {
+        const x = parseFloat(icon.style.left) || 0;
+        const y = parseFloat(icon.style.top) || 0;
+        const maxX = window.innerWidth - icon.offsetWidth - 8;
+        const maxY = window.innerHeight - icon.offsetHeight - 8;
+        if (x > maxX) icon.style.left = maxX + 'px';
+        if (y > maxY) icon.style.top = maxY + 'px';
+      });
+    });
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
@@ -796,10 +916,10 @@
       }
     });
 
-    // Resume download (placeholder)
+    // Resume download
     document.getElementById('resumeBtn').addEventListener('click', (e) => {
       e.preventDefault();
-      alert('Add your resume PDF to the site and update this link:\n\n<a href="path/to/your-resume.pdf" download>Resume</a>');
+      alert('Add your resume PDF to the site and update the href:\n\n<a href="path/to/your-resume.pdf" download>Resume</a>');
     });
   </script>
 </body>
