@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tate - Motion Designer & Digital Artist | d0nt.blinkk</title>
+  <title>d0nt.blinkk</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <style>
     :root{
@@ -18,65 +18,42 @@
     body.light{background:var(--bg-light);color:#000}
     body.dark{background:var(--bg-dark);color:#f3f4f8}
 
-    /* Header */
+    /* Header - Minimal Icon Buttons */
     .header {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 20px;
+      right: 20px;
       z-index: 2500;
-      padding: 14px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
-    body.dark .header {
-      background: rgba(15,18,32,0.92);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .header-left h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-    .header-left p {
-      margin: 2px 0 0;
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-    .header-right {
       display: flex;
       gap: 10px;
       align-items: center;
-      flex-wrap: wrap;
     }
-    .header-right button, .header-right a {
-      padding: 7px 14px;
+    .header button, .header a {
+      width: 44px;
+      height: 44px;
+      padding: 0;
       border: 0;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      color: #333;
+      border-radius: 50%;
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.85rem;
+      font-size: 1.1rem;
       text-decoration: none;
-      transition: transform 0.2s var(--ease), background 0.2s var(--ease);
-      white-space: nowrap;
+      transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-    .header-right button:hover, .header-right a:hover {
-      transform: translateY(-2px);
-      background: #3a5a8a;
+    body.dark .header button, body.dark .header a {
+      background: rgba(30,35,45,0.9);
+      color: #f3f4f8;
     }
-    .theme-btn {
-      background: rgba(0,0,0,0.1) !important;
-      color: inherit !important;
-      padding: 7px 11px !important;
-    }
-    body.dark .theme-btn {
-      background: rgba(255,255,255,0.1) !important;
+    .header button:hover, .header a:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     /* Loading State */
@@ -145,56 +122,62 @@
       .icon span{font-size: 10px}
     }
 
-    /* Category Filters - Floating */
+    /* Category Filters - Circular Bubbles */
     .filters {
       position: fixed;
-      top: 70px;
+      top: 20px;
       left: 20px;
       z-index: 2000;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
-      padding: 12px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    }
-    body.dark .filters {
-      background: rgba(20,25,35,0.88);
+      gap: 10px;
     }
     .filter-btn {
-      padding: 6px 12px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: transparent;
-      color: inherit;
-      border-radius: 20px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      color: #333;
+      border-radius: 50%;
       cursor: pointer;
       font-family: inherit;
-      font-size: 0.8rem;
+      font-size: 0.65rem;
       transition: all 0.2s var(--ease);
-      text-align: left;
-      white-space: nowrap;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      letter-spacing: -0.5px;
+    }
+    body.dark .filter-btn {
+      background: rgba(30,35,45,0.9);
+      color: #f3f4f8;
     }
     .filter-btn:hover {
-      background: rgba(0,0,0,0.05);
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .filter-btn.active {
       background: var(--primary);
       color: #fff;
-      border-color: var(--primary);
-    }
-    body.dark .filter-btn:hover {
-      background: rgba(255,255,255,0.1);
     }
 
     @media (max-width: 768px) {
       .filters {
         flex-direction: row;
         flex-wrap: wrap;
+        top: 10px;
         left: 10px;
-        right: 10px;
-        top: 60px;
+        max-width: calc(100vw - 150px);
+      }
+      .filter-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 0.6rem;
       }
     }
 
@@ -437,42 +420,16 @@
       opacity: 0.7;
     }
 
-    /* Footer */
-    .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 12px 20px;
-      text-align: center;
-      font-size: 0.8rem;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(0,0,0,0.08);
-      z-index: 2000;
-      opacity: 0.9;
-    }
-    body.dark .footer {
-      background: rgba(15,18,32,0.92);
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
     @media (max-width: 768px) {
       .header {
-        padding: 10px 14px;
+        top: 10px;
+        right: 10px;
+        gap: 8px;
       }
-      .header-left h1 {
+      .header button, .header a {
+        width: 40px;
+        height: 40px;
         font-size: 1rem;
-      }
-      .header-left p {
-        font-size: 0.7rem;
-      }
-      .header-right {
-        gap: 6px;
-      }
-      .header-right button, .header-right a {
-        padding: 6px 10px;
-        font-size: 0.75rem;
       }
       .project-content {
         padding: 20px;
@@ -483,32 +440,22 @@
       .about-card {
         padding: 24px;
       }
-      .footer {
-        font-size: 0.7rem;
-        padding: 10px;
-      }
     }
   </style>
 </head>
 <body class="light">
   <div class="loading" id="loading">Loading portfolio...</div>
 
-  <!-- Header -->
+  <!-- Header - Icon Buttons Only -->
   <header class="header">
-    <div class="header-left">
-      <h1>Tate | d0nt.blinkk</h1>
-      <p>Motion Designer & Digital Artist</p>
-    </div>
-    <div class="header-right">
-      <button class="theme-btn" id="themeToggle">🌙</button>
-      <button id="aboutBtn">About</button>
-      <a href="#" id="resumeBtn" download>Resume</a>
-    </div>
+    <button id="themeToggle" title="Toggle theme">🌙</button>
+    <button id="aboutBtn" title="About & Contact">ℹ️</button>
+    <a href="#" id="resumeBtn" download title="Download Resume">📄</a>
   </header>
 
-  <!-- Category Filters - Floating -->
+  <!-- Category Filters - Circular Bubbles -->
   <div class="filters" id="filtersContainer">
-    <button class="filter-btn active" data-category="all">All Work</button>
+    <button class="filter-btn active" data-category="all" title="All Work">ALL</button>
   </div>
 
   <!-- Desktop - Draggable Icons -->
@@ -589,10 +536,6 @@
     </div>
   </div>
 
-  <footer class="footer">
-    © 2025 Tate | d0nt.blinkk — Available for freelance & full-time opportunities
-  </footer>
-
   <script>
     let topZ = 100;
     const desktop = document.getElementById('desktop');
@@ -665,14 +608,22 @@
       });
 
     function buildFilters() {
-      filtersContainer.innerHTML = '<button class="filter-btn active" data-category="all">All Work</button>';
+      filtersContainer.innerHTML = '<button class="filter-btn active" data-category="all" title="All Work">ALL</button>';
+      
+      const categoryIcons = {
+        'motion': 'MOT',
+        'branding': 'BRD',
+        '3d': '3D',
+        'illustration': 'ILL'
+      };
       
       categories.forEach(cat => {
         if (cat !== 'all') {
           const btn = document.createElement('button');
           btn.className = 'filter-btn';
           btn.dataset.category = cat;
-          btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+          btn.textContent = categoryIcons[cat] || cat.substring(0, 3).toUpperCase();
+          btn.title = cat.charAt(0).toUpperCase() + cat.slice(1);
           filtersContainer.appendChild(btn);
         }
       });
