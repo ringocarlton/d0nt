@@ -27,39 +27,39 @@
     .icon:hover img{transform:scale(1.05);box-shadow:0 8px 22px rgba(0,0,0,.22)}
     .icon.grabbing{cursor:grabbing}
     
-    .modal{display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:40px;overflow-y:auto}
+    .modal{display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px;overflow-y:auto}
     .modal.visible{display:flex}
-    .modal-card{width:auto;max-width:95vw;max-height:90vh;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .35s var(--ease);display:flex;flex-direction:column}
+    .modal-card{width:auto;max-width:min(90vw,1200px);max-height:90vh;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideUp .35s var(--ease);display:flex;flex-direction:column}
     body.dark .modal-card{background:#1a1d28}
     @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .modal-img{width:100%;max-height:65vh;object-fit:contain;background:#000}
-    .modal-content{padding:28px;overflow-y:auto;max-height:35vh}
-    .modal-content h2{margin:0 0 8px;font-size:1.8rem}
-    .modal-meta{display:flex;gap:16px;margin-bottom:20px;font-size:.85rem;opacity:.7;flex-wrap:wrap}
+    .modal-img{width:auto;height:auto;max-width:100%;max-height:calc(90vh - 250px);object-fit:contain;background:#000;display:block;margin:0 auto}
+    .modal-content{padding:24px;overflow-y:auto;max-height:250px;font-family:"IBM Plex Mono",monospace}
+    .modal-content h2{margin:0 0 12px;font-size:1.6rem;font-family:"IBM Plex Mono",monospace;font-weight:600}
+    .modal-meta{display:flex;gap:16px;margin-bottom:16px;font-size:.85rem;opacity:.7;flex-wrap:wrap;font-family:"IBM Plex Mono",monospace}
     .modal-meta span{display:flex;align-items:center;gap:6px}
-    .modal-section{margin-bottom:20px;line-height:1.6}
-    .modal-section h3{font-size:1.1rem;margin-bottom:8px;color:var(--primary)}
-    .modal-section ul{margin:0;padding-left:20px}
-    .modal-links{display:flex;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid rgba(0,0,0,.1);flex-wrap:wrap}
+    .modal-section{margin-bottom:16px;line-height:1.6;font-family:"IBM Plex Mono",monospace}
+    .modal-section h3{font-size:1rem;margin:16px 0 8px;color:var(--primary);font-family:"IBM Plex Mono",monospace;font-weight:600}
+    .modal-section ul{margin:0;padding-left:20px;font-family:"IBM Plex Mono",monospace}
+    .modal-links{display:flex;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(0,0,0,.1);flex-wrap:wrap}
     body.dark .modal-links{border-top:1px solid rgba(255,255,255,.1)}
-    .modal-links a{padding:10px 20px;background:var(--primary);color:#fff;text-decoration:none;border-radius:8px;font-size:.9rem;transition:background .2s var(--ease)}
+    .modal-links a{padding:10px 20px;background:var(--primary);color:#fff;text-decoration:none;border-radius:8px;font-size:.85rem;font-family:"IBM Plex Mono",monospace;transition:background .2s var(--ease)}
     .modal-links a:hover{background:#3a5a8a}
     .close-btn{position:absolute;top:20px;right:20px;width:40px;height:40px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;cursor:pointer;font-size:1.5rem;display:flex;align-items:center;justify-content:center;z-index:10}
     .close-btn:hover{background:rgba(0,0,0,.8)}
     
-    .about-card{max-width:680px;width:100%;padding:32px;border-radius:16px;max-height:90vh;overflow-y:auto}
-    .about-card h2{margin-top:0;font-size:1.8rem}
-    .about-card .bio,.about-card .skills{margin-bottom:24px;line-height:1.7}
-    .about-card .skills h3{font-size:1.2rem;margin-bottom:12px;color:var(--primary)}
+    .about-card{max-width:680px;width:100%;padding:32px;border-radius:16px;max-height:90vh;overflow-y:auto;font-family:"IBM Plex Mono",monospace}
+    .about-card h2{margin-top:0;font-size:1.6rem;font-family:"IBM Plex Mono",monospace;font-weight:600}
+    .about-card .bio,.about-card .skills{margin-bottom:24px;line-height:1.7;font-family:"IBM Plex Mono",monospace}
+    .about-card .skills h3{font-size:1.1rem;margin-bottom:12px;color:var(--primary);font-family:"IBM Plex Mono",monospace;font-weight:600}
     .about-card .skills ul{list-style:none;padding:0;display:flex;flex-wrap:wrap;gap:10px}
-    .about-card .skills li{background:rgba(74,111,165,.15);padding:6px 14px;border-radius:20px;font-size:.85rem}
-    .contact-methods{display:flex;flex-direction:column;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid rgba(0,0,0,.1)}
+    .about-card .skills li{background:rgba(74,111,165,.15);padding:6px 14px;border-radius:20px;font-size:.85rem;font-family:"IBM Plex Mono",monospace}
+    .contact-methods{display:flex;flex-direction:column;gap:12px;margin-top:24px;padding-top:24px;border-top:1px solid rgba(0,0,0,.1);font-family:"IBM Plex Mono",monospace}
     body.dark .contact-methods{border-top:1px solid rgba(255,255,255,.1)}
-    .contact-methods a{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(74,111,165,.1);border-radius:8px;text-decoration:none;color:inherit;transition:background .2s var(--ease)}
+    .contact-methods a{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(74,111,165,.1);border-radius:8px;text-decoration:none;color:inherit;transition:background .2s var(--ease);font-family:"IBM Plex Mono",monospace}
     .contact-methods a:hover{background:rgba(74,111,165,.2)}
-    .testimonial{background:rgba(0,0,0,.03);padding:16px;border-radius:8px;margin-bottom:12px;font-style:italic;line-height:1.6}
+    .testimonial{background:rgba(0,0,0,.03);padding:16px;border-radius:8px;margin-bottom:12px;font-style:italic;line-height:1.6;font-family:"IBM Plex Mono",monospace}
     body.dark .testimonial{background:rgba(255,255,255,.05)}
-    .testimonial-author{margin-top:8px;font-style:normal;font-size:.85rem;opacity:.7}
+    .testimonial-author{margin-top:8px;font-style:normal;font-size:.85rem;opacity:.7;font-family:"IBM Plex Mono",monospace}
     
     .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:5000;font-size:1.2rem}
     .loading.hidden{display:none}
@@ -71,7 +71,8 @@
       .header button,.header a,.filter-btn{width:40px;height:40px;font-size:.6rem}
       .filters{top:10px;left:10px;flex-direction:row;max-width:calc(100vw - 150px)}
       .modal-content{padding:20px}
-      .modal-content h2{font-size:1.4rem}
+      .modal-content h2{font-size:1.3rem}
+      .modal-img{max-height:60vh}
       .about-card{padding:24px}
     }
   </style>
