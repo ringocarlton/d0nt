@@ -1,926 +1,847 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Tate - Motion Designer & Digital Artist | d0nt.blinkk</title>
-  <link rel="icon" href="favicon.png" type="image/png">
-  <style>
-    :root{
-      --bg-light: linear-gradient(180deg,#d9e0e7 0%,#cdd5df 100%);
-      --bg-dark: linear-gradient(180deg,#0f1220 0%,#1b2030 100%);
-      --accent: rgba(255,255,255,0.9);
-      --ease: cubic-bezier(.25,.1,.25,1);
-      --primary: #4a6fa5;
-    }
-    * { box-sizing: border-box; }
-    html,body{height:100%;margin:0;font-family:"IBM Plex Mono",monospace;overflow:hidden;touch-action:none}
-    body.light{background:var(--bg-light);color:#000}
-    body.dark{background:var(--bg-dark);color:#f3f4f8}
-
-    /* Header */
-    .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 2500;
-      padding: 14px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
-    body.dark .header {
-      background: rgba(15,18,32,0.92);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .header-left h1 {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-    .header-left p {
-      margin: 2px 0 0;
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-    .header-right {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .header-right button, .header-right a {
-      padding: 7px 14px;
-      border: 0;
-      background: var(--primary);
-      color: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.85rem;
-      text-decoration: none;
-      transition: transform 0.2s var(--ease), background 0.2s var(--ease);
-      white-space: nowrap;
-    }
-    .header-right button:hover, .header-right a:hover {
-      transform: translateY(-2px);
-      background: #3a5a8a;
-    }
-    .theme-btn {
-      background: rgba(0,0,0,0.1) !important;
-      color: inherit !important;
-      padding: 7px 11px !important;
-    }
-    body.dark .theme-btn {
-      background: rgba(255,255,255,0.1) !important;
-    }
-
-    /* Loading State */
-    .loading {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5000;
-      background: inherit;
-      font-size: 1.2rem;
-    }
-    .loading.hidden { display: none; }
-
-    /* Desktop - Floating Icons */
-    .desktop{
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      transition: background 0.45s var(--ease);
-    }
-
-    .icon{
-      position: absolute;
-      width: 100px;
-      text-align: center;
-      user-select: none;
-      cursor: grab;
-      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
-      -webkit-tap-highlight-color: transparent;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      z-index: 100;
-    }
-    .icon img{
-      width: 100px;
-      height: 100px;
-      border-radius: 12px;
-      object-fit: cover;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-      will-change: left, top, transform;
-      transition: transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
-      display: block;
-    }
-    .icon span{
-      font-size: 11px;
-      color: inherit;
-      max-width: 110px;
-      word-break: break-word;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .icon:hover img{
-      transform: scale(1.05);
-      box-shadow: 0 8px 22px rgba(0,0,0,0.22);
-    }
-    .icon.grabbing {
-      cursor: grabbing;
-    }
-
-    @media (max-width:768px){
-      .icon, .icon img{width: 80px; height: 80px}
-      .icon span{font-size: 10px}
-    }
-
-    /* Category Filters - Floating */
-    .filters {
-      position: fixed;
-      top: 70px;
-      left: 20px;
-      z-index: 2000;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(10px);
-      padding: 12px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-    }
-    body.dark .filters {
-      background: rgba(20,25,35,0.88);
-    }
-    .filter-btn {
-      padding: 6px 12px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: transparent;
-      color: inherit;
-      border-radius: 20px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.8rem;
-      transition: all 0.2s var(--ease);
-      text-align: left;
-      white-space: nowrap;
-    }
-    .filter-btn:hover {
-      background: rgba(0,0,0,0.05);
-    }
-    .filter-btn.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-    body.dark .filter-btn:hover {
-      background: rgba(255,255,255,0.1);
-    }
-
-    @media (max-width: 768px) {
-      .filters {
-        flex-direction: row;
-        flex-wrap: wrap;
-        left: 10px;
-        right: 10px;
-        top: 60px;
-      }
-    }
-
-    /* Project Modal */
-    .project-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 4000;
-      background: rgba(0,0,0,0.88);
-      backdrop-filter: blur(10px);
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      overflow-y: auto;
-    }
-    .project-modal.visible { display: flex; }
-    .project-card {
-      max-width: 1000px;
-      width: 100%;
-      background: #fff;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      animation: slideUp 0.35s var(--ease);
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-    }
-    body.dark .project-card {
-      background: #1a1d28;
-    }
-    @keyframes slideUp {
-      from { transform: translateY(40px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    .project-image-container {
-      width: 100%;
-      max-height: 500px;
-      overflow: hidden;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .project-image {
-      width: 100%;
-      height: auto;
-      max-height: 500px;
-      object-fit: contain;
-      display: block;
-    }
-    .project-content {
-      padding: 28px;
-      overflow-y: auto;
-    }
-    .project-content h2 {
-      margin: 0 0 8px;
-      font-size: 1.8rem;
-    }
-    .project-meta {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 20px;
-      font-size: 0.85rem;
-      opacity: 0.7;
-      flex-wrap: wrap;
-    }
-    .project-meta span {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .project-description {
-      line-height: 1.6;
-      margin-bottom: 24px;
-    }
-    .project-section {
-      margin-bottom: 20px;
-    }
-    .project-section h3 {
-      font-size: 1.1rem;
-      margin-bottom: 8px;
-      color: var(--primary);
-    }
-    .project-section ul {
-      margin: 0;
-      padding-left: 20px;
-      line-height: 1.8;
-    }
-    .project-links {
-      display: flex;
-      gap: 12px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(0,0,0,0.1);
-      flex-wrap: wrap;
-    }
-    body.dark .project-links {
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .project-links a {
-      padding: 10px 20px;
-      background: var(--primary);
-      color: #fff;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      transition: background 0.2s var(--ease);
-    }
-    .project-links a:hover {
-      background: #3a5a8a;
-    }
-    .close-modal {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 40px;
-      height: 40px;
-      border: 0;
-      background: rgba(0,0,0,0.6);
-      color: #fff;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s var(--ease);
-      z-index: 10;
-    }
-    .close-modal:hover {
-      background: rgba(0,0,0,0.8);
-    }
-
-    /* About/Contact Overlay */
-    .about-overlay{
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.75);
-      z-index: 4500;
-      padding: 20px;
-    }
-    .about-overlay.visible{display: flex}
-    .about-card{
-      max-width: 680px;
-      width: 100%;
-      background: #fff;
-      color: #000;
-      padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    body.dark .about-card{
-      background: #1a1d28;
-      color: #fff;
-    }
-    .about-card h2 {
-      margin-top: 0;
-      font-size: 1.8rem;
-    }
-    .about-card .bio {
-      line-height: 1.7;
-      margin-bottom: 24px;
-    }
-    .about-card .skills {
-      margin-bottom: 24px;
-    }
-    .about-card .skills h3 {
-      font-size: 1.2rem;
-      margin-bottom: 12px;
-      color: var(--primary);
-    }
-    .about-card .skills ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .about-card .skills li {
-      background: rgba(74,111,165,0.15);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-    }
-    .contact-methods {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(0,0,0,0.1);
-    }
-    body.dark .contact-methods {
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .contact-methods a {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px;
-      background: rgba(74,111,165,0.1);
-      border-radius: 8px;
-      text-decoration: none;
-      color: inherit;
-      transition: background 0.2s var(--ease);
-    }
-    .contact-methods a:hover {
-      background: rgba(74,111,165,0.2);
-    }
-    .testimonials {
-      margin-top: 24px;
-    }
-    .testimonials h3 {
-      font-size: 1.2rem;
-      margin-bottom: 16px;
-      color: var(--primary);
-    }
-    .testimonial {
-      background: rgba(0,0,0,0.03);
-      padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-      font-style: italic;
-      line-height: 1.6;
-    }
-    body.dark .testimonial {
-      background: rgba(255,255,255,0.05);
-    }
-    .testimonial-author {
-      margin-top: 8px;
-      font-style: normal;
-      font-size: 0.85rem;
-      opacity: 0.7;
-    }
-
-    /* Footer */
-    .footer {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 12px 20px;
-      text-align: center;
-      font-size: 0.8rem;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid rgba(0,0,0,0.08);
-      z-index: 2000;
-      opacity: 0.9;
-    }
-    body.dark .footer {
-      background: rgba(15,18,32,0.92);
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    @media (max-width: 768px) {
-      .header {
-        padding: 10px 14px;
-      }
-      .header-left h1 {
-        font-size: 1rem;
-      }
-      .header-left p {
-        font-size: 0.7rem;
-      }
-      .header-right {
-        gap: 6px;
-      }
-      .header-right button, .header-right a {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-      }
-      .project-content {
-        padding: 20px;
-      }
-      .project-content h2 {
-        font-size: 1.4rem;
-      }
-      .about-card {
-        padding: 24px;
-      }
-      .footer {
-        font-size: 0.7rem;
-        padding: 10px;
-      }
-    }
-  </style>
-</head>
-<body class="light">
-  <div class="loading" id="loading">Loading portfolio...</div>
-
-  <!-- Header -->
-  <header class="header">
-    <div class="header-left">
-      <h1>Tate | d0nt.blinkk</h1>
-      <p>Motion Designer & Digital Artist</p>
-    </div>
-    <div class="header-right">
-      <button class="theme-btn" id="themeToggle">🌙</button>
-      <button id="aboutBtn">About</button>
-      <a href="#" id="resumeBtn" download>Resume</a>
-    </div>
-  </header>
-
-  <!-- Category Filters - Floating -->
-  <div class="filters" id="filtersContainer">
-    <button class="filter-btn active" data-category="all">All Work</button>
-  </div>
-
-  <!-- Desktop - Draggable Icons -->
-  <div class="desktop" id="desktop"></div>
-
-  <!-- About/Contact Overlay -->
-  <div class="about-overlay" id="aboutOverlay" aria-hidden="true">
-    <div class="about-card">
-      <h2>About Tate</h2>
-      <div class="bio">
-        <p>I'm a motion designer and digital artist with 5+ years of experience creating compelling visual narratives across motion graphics, branding, and 3D design. With a background in Fine Art, I bring a unique perspective to every project, blending technical expertise with creative storytelling.</p>
-        <p>My work has been featured in campaigns for emerging brands and independent projects, always pushing the boundaries of digital expression.</p>
-      </div>
-
-      <div class="skills">
-        <h3>Technical Skills</h3>
-        <ul>
-          <li>After Effects</li>
-          <li>Cinema 4D</li>
-          <li>Blender</li>
-          <li>Adobe Suite</li>
-          <li>Premiere Pro</li>
-          <li>Illustrator</li>
-          <li>Figma</li>
-          <li>TouchDesigner</li>
-        </ul>
-      </div>
-
-      <div class="testimonials">
-        <h3>What Clients Say</h3>
-        <div class="testimonial">
-          "Tate's work exceeded our expectations. The attention to detail and creative vision brought our brand to life in ways we couldn't have imagined."
-          <div class="testimonial-author">— Creative Director, Studio X</div>
-        </div>
-        <div class="testimonial">
-          "Professional, responsive, and incredibly talented. Tate delivered a stunning motion piece on time and on budget."
-          <div class="testimonial-author">— Marketing Lead, Tech Startup</div>
-        </div>
-      </div>
-
-      <div class="contact-methods">
-        <h3 style="margin: 0 0 12px; color: var(--primary);">Let's Work Together</h3>
-        <a href="mailto:hello@d0ntblinkk.com">📧 hello@d0ntblinkk.com</a>
-        <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener">📷 Instagram: @d0nt.blinkk</a>
-        <a href="https://linkedin.com/in/tate-artist" target="_blank" rel="noopener">💼 LinkedIn Profile</a>
-      </div>
-
-      <div style="text-align:right;margin-top:24px">
-        <button id="closeAbout" style="padding:10px 24px;border:0;background:var(--primary);color:#fff;border-radius:8px;cursor:pointer">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Project Modal -->
-  <div class="project-modal" id="projectModal" aria-hidden="true">
-    <button class="close-modal" id="closeModal">×</button>
-    <div class="project-card">
-      <div class="project-image-container">
-        <img class="project-image" id="modalImage" src="" alt="" />
-      </div>
-      <div class="project-content">
-        <h2 id="modalTitle"></h2>
-        <div class="project-meta" id="modalMeta"></div>
-        <div class="project-description" id="modalDescription"></div>
-        
-        <div class="project-section" id="skillsSection" style="display:none">
-          <h3>Skills Used</h3>
-          <ul id="modalSkills"></ul>
-        </div>
-        
-        <div class="project-section" id="challengesSection" style="display:none">
-          <h3>Challenges & Solutions</h3>
-          <p id="modalChallenges"></p>
-        </div>
-
-        <div class="project-links" id="modalLinks"></div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="footer">
-    © 2025 Tate | d0nt.blinkk — Available for freelance & full-time opportunities
-  </footer>
-
-  <script>
-    let topZ = 100;
-    const desktop = document.getElementById('desktop');
-    const projectModal = document.getElementById('projectModal');
-    const closeModal = document.getElementById('closeModal');
-    const themeToggle = document.getElementById('themeToggle');
-    const aboutBtn = document.getElementById('aboutBtn');
-    const aboutOverlay = document.getElementById('aboutOverlay');
-    const closeAbout = document.getElementById('closeAbout');
-    const filtersContainer = document.getElementById('filtersContainer');
-    const loading = document.getElementById('loading');
-
-    let projects = [];
-    let currentFilter = 'all';
-    let categories = new Set(['all']);
-
-    // Optional metadata for your images
-    const projectMetadata = {
-      // Example: Uncomment and customize for your actual projects
-      // 'demo-reel.jpg': {
-      //   title: '2025 Demo Reel',
-      //   category: 'motion',
-      //   year: '2025',
-      //   role: 'Motion Designer',
-      //   description: 'A comprehensive showcase of my motion design work...',
-      //   skills: ['After Effects', 'Cinema 4D', 'Sound Design'],
-      //   challenges: 'Creating a cohesive narrative across diverse styles...',
-      //   links: [
-      //     { text: 'Watch on Vimeo', url: 'https://vimeo.com/...' }
-      //   ]
-      // }
-    };
-
-    // Fetch images from images.json
-    fetch('images.json')
-      .then(r => r.json())
-      .then(imageFiles => {
-        projects = imageFiles.map((filename, index) => {
-          const metadata = projectMetadata[filename] || {};
-          const title = metadata.title || filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-          const category = metadata.category || 'all';
-          
-          if (category !== 'all') {
-            categories.add(category);
-          }
-
-          return {
-            id: filename,
-            image: `images/${filename}`,
-            filename: filename,
-            title: title,
-            category: category,
-            year: metadata.year || '2024',
-            role: metadata.role || 'Designer',
-            description: metadata.description || `Professional work showcasing ${title}.`,
-            skills: metadata.skills || [],
-            challenges: metadata.challenges || '',
-            links: metadata.links || []
-          };
-        });
-
-        buildFilters();
-        createIcons();
-        startDrift();
-        loading.classList.add('hidden');
-      })
-      .catch(err => {
-        console.error('Error loading images.json:', err);
-        loading.innerHTML = 'Error loading portfolio. Please make sure images.json exists.';
-      });
-
-    function buildFilters() {
-      filtersContainer.innerHTML = '<button class="filter-btn active" data-category="all">All Work</button>';
-      
-      categories.forEach(cat => {
-        if (cat !== 'all') {
-          const btn = document.createElement('button');
-          btn.className = 'filter-btn';
-          btn.dataset.category = cat;
-          btn.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-          filtersContainer.appendChild(btn);
-        }
-      });
-
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentFilter = btn.dataset.category;
-          filterIcons();
-        });
-      });
-    }
-
-    function createIcons() {
-      projects.forEach(project => {
-        const icon = document.createElement('div');
-        icon.className = 'icon';
-        icon.dataset.category = project.category;
-        
-        const left = 60 + Math.random() * (window.innerWidth - 240);
-        const top = 100 + Math.random() * (window.innerHeight - 280);
-        icon.style.left = `${left}px`;
-        icon.style.top = `${top}px`;
-        
-        icon.innerHTML = `<img src="${project.image}" alt="${project.title}"><span>${project.title}</span>`;
-        desktop.appendChild(icon);
-
-        const img = icon.querySelector('img');
-        let isDragging = false, startX = 0, startY = 0, offsetX = 0, offsetY = 0, moved = false;
-        let lastX = 0, lastY = 0, lastTime = 0, vx = 0, vy = 0;
-        const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-
-        function onPointerDown(e) {
-          e.preventDefault();
-          img.setPointerCapture(e.pointerId);
-          isDragging = true;
-          moved = false;
-          startX = e.clientX;
-          startY = e.clientY;
-          offsetX = e.clientX - icon.getBoundingClientRect().left;
-          offsetY = e.clientY - icon.getBoundingClientRect().top;
-          lastX = e.clientX;
-          lastY = e.clientY;
-          lastTime = performance.now();
-          topZ += 1;
-          icon.style.zIndex = topZ;
-          icon.classList.add('grabbing');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d0nt.blinkk</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        :root {
+            --ease: cubic-bezier(.25,.1,.25,1);
         }
 
-        function onPointerMove(e) {
-          if (!isDragging) return;
-          const dx = e.clientX - startX, dy = e.clientY - startY;
-          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
-          
-          const now = performance.now();
-          const dt = Math.max(16, now - lastTime);
-          vx = (e.clientX - lastX) / dt;
-          vy = (e.clientY - lastY) / dt;
-          lastX = e.clientX;
-          lastY = e.clientY;
-          lastTime = now;
-          
-          icon.style.left = (e.clientX - offsetX) + 'px';
-          icon.style.top = (e.clientY - offsetY) + 'px';
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        function onPointerUp(e) {
-          img.releasePointerCapture(e.pointerId);
-          icon.classList.remove('grabbing');
-          isDragging = false;
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+            touch-action: pan-y;
+        }
 
-          if (isTouchDevice && (Math.abs(vx) > 0.01 || Math.abs(vy) > 0.01)) {
-            let decay = 0.92;
-            function step() {
-              let x = parseFloat(icon.style.left) || 0;
-              let y = parseFloat(icon.style.top) || 0;
-              vx *= decay;
-              vy *= decay;
-              x += vx * 16;
-              y += vy * 16;
-              const maxX = window.innerWidth - icon.offsetWidth - 8;
-              const maxY = window.innerHeight - icon.offsetHeight - 8;
-              x = Math.max(8, Math.min(maxX, x));
-              y = Math.max(8, Math.min(maxY, y));
-              icon.style.left = x + 'px';
-              icon.style.top = y + 'px';
-              if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) requestAnimationFrame(step);
+        /* PSP Main Screen */
+        .psp-screen {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: radial-gradient(ellipse at center, #16213e 0%, #0a0e27 100%);
+            transition: opacity 0.5s ease;
+        }
+
+        .waves {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.3;
+        }
+
+        .wave {
+            position: absolute;
+            width: 200%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: wave 3s linear infinite;
+        }
+
+        .wave:nth-child(1) { top: 20%; animation-delay: 0s; }
+        .wave:nth-child(2) { top: 40%; animation-delay: 0.5s; }
+        .wave:nth-child(3) { top: 60%; animation-delay: 1s; }
+        .wave:nth-child(4) { top: 80%; animation-delay: 1.5s; }
+
+        @keyframes wave {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .xmb-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-items {
+            display: flex;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+        }
+
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0.4;
+            transform: scale(0.7);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .menu-item.active {
+            opacity: 1;
+            transform: scale(1.3);
+        }
+
+        .menu-icon {
+            width: 100px;
+            height: 100px;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item.active .menu-icon {
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+        }
+
+        .menu-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: rgba(255, 255, 255, 0.7);
+            fill: none;
+            stroke-width: 2;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item.active .menu-icon svg {
+            stroke: #fff;
+        }
+
+        .time-date {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            text-align: right;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .vertical-line {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.3), transparent);
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.5;
+        }
+
+        .horizontal-line {
+            position: absolute;
+            height: 2px;
+            width: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+
+        /* Transition Screen */
+        .transition-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .transition-screen.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .loading-icon {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Desktop View (for Projects) */
+        .desktop-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #16213e 0%, #0a0e27 100%);
+            display: none;
+            z-index: 999;
+            overflow: hidden;
+        }
+
+        .desktop-view.active {
+            display: block;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            z-index: 2000;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover, .back-btn:active {
+            border-color: rgba(255,255,255,0.8);
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        /* Desktop Icons */
+        .icon {
+            position: absolute;
+            width: 100px;
+            text-align: center;
+            user-select: none;
+            cursor: grab;
+            transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon img {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0,0,0,.18);
+            will-change: left, top, transform;
+            transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+            display: block;
+        }
+
+        .icon span {
+            font-size: 12px;
+            color: inherit;
+            max-width: 110px;
+            word-break: break-word;
+        }
+
+        .icon:hover img {
+            transform: scale(1.05);
+            box-shadow: 0 8px 22px rgba(0,0,0,.22);
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(0,0,0,.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox.visible {
+            display: flex;
+        }
+
+        .lightbox-card {
+            max-width: 92%;
+            max-height: 92%;
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lightbox-card img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .lightbox-caption {
+            padding: 10px 14px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.9);
+            background: rgba(0,0,0,.12);
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Gallery View (for Skills & CV) */
+        .gallery-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #16213e 0%, #0a0e27 100%);
+            display: none;
+            flex-direction: column;
+            z-index: 999;
+        }
+
+        .gallery-view.active {
+            display: flex;
+        }
+
+        .gallery-header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .gallery-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 30px;
+            align-content: start;
+        }
+
+        /* Skills Grid */
+        .skill-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .skill-icon {
+            width: 80px;
+            height: 80px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .skill-icon:hover {
+            border-color: rgba(255,255,255,0.8);
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+
+        .skill-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            filter: grayscale(100%) brightness(200%);
+        }
+
+        .skill-name {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* CV Viewer */
+        .cv-viewer {
+            width: 100%;
+            height: calc(100vh - 80px);
+            border: none;
+            background: white;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 768px) {
+            .menu-items {
+                gap: 50px;
             }
-            requestAnimationFrame(step);
-          }
+            .menu-icon {
+                width: 80px;
+                height: 80px;
+            }
+            .menu-icon svg {
+                width: 40px;
+                height: 40px;
+            }
+            .icon, .icon img {
+                width: 80px;
+                height: 80px;
+            }
+            .icon span {
+                font-size: 10px;
+            }
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PSP Main Screen -->
+    <div class="psp-screen" id="mainScreen">
+        <div class="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+
+        <div class="vertical-line"></div>
+        <div class="horizontal-line"></div>
+
+        <div class="time-date">
+            <div id="time"></div>
+            <div id="date"></div>
+        </div>
+
+        <div class="xmb-container">
+            <div class="menu-items">
+                <div class="menu-item" data-section="about">
+                    <div class="menu-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="menu-item active" data-section="projects">
+                    <div class="menu-icon">
+                        <svg viewBox="0 0 24 24">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="skills">
+                    <div class="menu-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="menu-item" data-section="contact">
+                    <div class="menu-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transition Screen -->
+    <div class="transition-screen" id="transitionScreen">
+        <div class="loading-icon"></div>
+    </div>
+
+    <!-- Desktop View (Projects with draggable icons) -->
+    <div class="desktop-view" id="desktopView">
+        <button class="back-btn" id="desktopBackBtn">← Back</button>
+        <div class="time-date">
+            <div id="desktopTime"></div>
+        </div>
+        <div id="desktop"></div>
+    </div>
+
+    <!-- Gallery View (Skills & CV) -->
+    <div class="gallery-view" id="galleryView">
+        <div class="gallery-header">
+            <button class="back-btn" id="galleryBackBtn">← Back</button>
+            <div class="time-date">
+                <div id="galleryTime"></div>
+            </div>
+        </div>
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox">
+        <div class="lightbox-card">
+            <img id="lightboxImg" src="" alt="preview" />
+            <div class="lightbox-caption" id="lightboxCaption"></div>
+        </div>
+    </div>
+
+    <script>
+        const menuItems = document.querySelectorAll('.menu-item');
+        const mainScreen = document.getElementById('mainScreen');
+        const transitionScreen = document.getElementById('transitionScreen');
+        const desktopView = document.getElementById('desktopView');
+        const galleryView = document.getElementById('galleryView');
+        const desktop = document.getElementById('desktop');
+        const galleryGrid = document.getElementById('galleryGrid');
+        const desktopBackBtn = document.getElementById('desktopBackBtn');
+        const galleryBackBtn = document.getElementById('galleryBackBtn');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+        let currentIndex = 1;
+        let topZ = 100;
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+            document.getElementById('time').textContent = timeStr;
+            document.getElementById('date').textContent = dateStr;
+            document.getElementById('galleryTime').textContent = timeStr;
+            document.getElementById('desktopTime').textContent = timeStr;
         }
 
-        icon.addEventListener('pointerdown', onPointerDown);
-        icon.addEventListener('pointermove', onPointerMove);
-        icon.addEventListener('pointerup', onPointerUp);
-        icon.addEventListener('pointercancel', () => {
-          isDragging = false;
-          icon.classList.remove('grabbing');
-        });
+        updateTime();
+        setInterval(updateTime, 1000);
 
-        icon.addEventListener('click', () => {
-          if (!moved) openProjectModal(project);
-        });
-      });
-    }
-
-    function filterIcons() {
-      const icons = document.querySelectorAll('.icon');
-      icons.forEach(icon => {
-        const category = icon.dataset.category;
-        if (currentFilter === 'all' || category === currentFilter) {
-          icon.style.display = 'flex';
-        } else {
-          icon.style.display = 'none';
+        function setActive(index) {
+            menuItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
         }
-      });
-    }
 
-    function openProjectModal(project) {
-      document.getElementById('modalImage').src = project.image;
-      document.getElementById('modalTitle').textContent = project.title;
-      
-      const metaHTML = [];
-      if (project.category !== 'all') {
-        metaHTML.push(`<span>📂 <span>${project.category}</span></span>`);
-      }
-      metaHTML.push(`<span>🗓️ <span>${project.year}</span></span>`);
-      metaHTML.push(`<span>👤 <span>${project.role}</span></span>`);
-      document.getElementById('modalMeta').innerHTML = metaHTML.join('');
-      
-      document.getElementById('modalDescription').textContent = project.description;
-      
-      const skillsSection = document.getElementById('skillsSection');
-      if (project.skills && project.skills.length > 0) {
-        const skillsList = document.getElementById('modalSkills');
-        skillsList.innerHTML = project.skills.map(s => `<li>${s}</li>`).join('');
-        skillsSection.style.display = 'block';
-      } else {
-        skillsSection.style.display = 'none';
-      }
-      
-      const challengesSection = document.getElementById('challengesSection');
-      if (project.challenges) {
-        document.getElementById('modalChallenges').textContent = project.challenges;
-        challengesSection.style.display = 'block';
-      } else {
-        challengesSection.style.display = 'none';
-      }
-      
-      const linksDiv = document.getElementById('modalLinks');
-      if (project.links && project.links.length > 0) {
-        linksDiv.innerHTML = project.links.map(link => 
-          `<a href="${link.url}" target="_blank" rel="noopener">${link.text}</a>`
-        ).join('');
-        linksDiv.style.display = 'flex';
-      } else {
-        linksDiv.style.display = 'none';
-      }
+        // Projects - Desktop with draggable icons
+        async function loadProjects() {
+            try {
+                const response = await fetch('images.json');
+                if (!response.ok) throw new Error('Failed to load projects');
+                
+                const images = await response.json();
+                desktop.innerHTML = '';
+                images.forEach(createIcon);
+                startDrift();
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                desktop.innerHTML = '<div class="error-message">Unable to load projects. Please ensure images.json exists.</div>';
+            }
+        }
 
-      projectModal.classList.add('visible');
-      projectModal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-    }
+        function createIcon(filename) {
+            const icon = document.createElement('div');
+            icon.className = 'icon';
+            const left = 40 + Math.random() * (window.innerWidth - 200);
+            const top = 80 + Math.random() * (window.innerHeight - 220);
+            icon.style.left = `${left}px`;
+            icon.style.top = `${top}px`;
+            icon.innerHTML = `<img src="images/${filename}" alt="${filename}"><span>${filename.replace(/\.[^/.]+$/, '')}</span>`;
+            desktop.appendChild(icon);
 
-    function closeProjectModal() {
-      projectModal.classList.remove('visible');
-      projectModal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-    }
+            const img = icon.querySelector('img');
+            let isDragging = false, startX = 0, startY = 0, offsetX = 0, offsetY = 0, moved = false;
+            let lastX = 0, lastY = 0, lastTime = 0, vx = 0, vy = 0;
+            const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
-    closeModal.addEventListener('click', closeProjectModal);
-    projectModal.addEventListener('click', (e) => {
-      if (e.target === projectModal) closeProjectModal();
-    });
+            function onPointerDown(e) {
+                e.preventDefault();
+                img.setPointerCapture(e.pointerId);
+                isDragging = true;
+                moved = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                offsetX = e.clientX - icon.getBoundingClientRect().left;
+                offsetY = e.clientY - icon.getBoundingClientRect().top;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                lastTime = performance.now();
+                topZ += 1;
+                icon.style.zIndex = topZ;
+                icon.style.cursor = 'grabbing';
+            }
 
-    // Theme toggle
-    themeToggle.addEventListener('click', () => {
-      if (document.body.classList.contains('light')) {
-        document.body.classList.remove('light');
-        document.body.classList.add('dark');
-        themeToggle.textContent = '☀️';
-      } else {
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        themeToggle.textContent = '🌙';
-      }
-    });
+            function onPointerMove(e) {
+                if (!isDragging) return;
+                const dx = e.clientX - startX, dy = e.clientY - startY;
+                if (Math.abs(dx) > 8 || Math.abs(dy) > 8) moved = true;
+                const now = performance.now();
+                const dt = Math.max(16, now - lastTime);
+                vx = (e.clientX - lastX) / dt;
+                vy = (e.clientY - lastY) / dt;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                lastTime = now;
+                icon.style.left = (e.clientX - offsetX) + 'px';
+                icon.style.top = (e.clientY - offsetY) + 'px';
+            }
 
-    // About modal
-    aboutBtn.addEventListener('click', () => {
-      aboutOverlay.classList.add('visible');
-      aboutOverlay.setAttribute('aria-hidden', 'false');
-    });
-    closeAbout.addEventListener('click', () => {
-      aboutOverlay.classList.remove('visible');
-      aboutOverlay.setAttribute('aria-hidden', 'true');
-    });
-    aboutOverlay.addEventListener('click', (e) => {
-      if (e.target === aboutOverlay) {
-        aboutOverlay.classList.remove('visible');
-        aboutOverlay.setAttribute('aria-hidden', 'true');
-      }
-    });
+            function onPointerUp(e) {
+                img.releasePointerCapture(e.pointerId);
+                icon.style.cursor = 'grab';
+                isDragging = false;
 
-    // Drift animation
-    function startDrift() {
-      const icons = document.querySelectorAll('.icon');
-      function drift(t) {
-        icons.forEach((icon, i) => {
-          if (icon.style.display === 'none') return;
-          const amp = 6;
-          const speed = 0.0003 + (i % 7) * 0.00005;
-          const dx = Math.sin((t * speed) + (i)) * amp;
-          const dy = Math.cos((t * speed * 1.1) + (i)) * amp * 0.6;
-          icon.style.transform = `translate(${dx}px, ${dy}px)`;
+                if (isTouchDevice && (Math.abs(vx) > 0.01 || Math.abs(vy) > 0.01)) {
+                    let decay = 0.92;
+                    function step() {
+                        let x = parseFloat(icon.style.left) || 0;
+                        let y = parseFloat(icon.style.top) || 0;
+                        vx *= decay;
+                        vy *= decay;
+                        x += vx * 16;
+                        y += vy * 16;
+                        const maxX = window.innerWidth - icon.offsetWidth - 8;
+                        const maxY = window.innerHeight - icon.offsetHeight - 8;
+                        x = Math.max(8, Math.min(maxX, x));
+                        y = Math.max(8, Math.min(maxY, y));
+                        icon.style.left = x + 'px';
+                        icon.style.top = y + 'px';
+                        if (Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05) requestAnimationFrame(step);
+                    }
+                    requestAnimationFrame(step);
+                }
+            }
+
+            icon.addEventListener('pointerdown', onPointerDown);
+            icon.addEventListener('pointermove', onPointerMove);
+            icon.addEventListener('pointerup', onPointerUp);
+            icon.addEventListener('pointercancel', () => {
+                isDragging = false;
+                icon.style.cursor = 'grab';
+            });
+
+            icon.addEventListener('click', () => {
+                if (!moved) showLightbox(`images/${filename}`, filename);
+            });
+        }
+
+        function showLightbox(src, filename) {
+            lightboxImg.src = src;
+            lightboxCaption.textContent = filename.replace(/\.[^/.]+$/, '');
+            lightbox.classList.add('visible');
+        }
+
+        lightbox.addEventListener('click', () => {
+            lightbox.classList.remove('visible');
         });
-        requestAnimationFrame(drift);
-      }
-      requestAnimationFrame(drift);
-    }
 
-    // Window resize handler
-    window.addEventListener('resize', () => {
-      document.querySelectorAll('.icon').forEach(icon => {
-        const x = parseFloat(icon.style.left) || 0;
-        const y = parseFloat(icon.style.top) || 0;
-        const maxX = window.innerWidth - icon.offsetWidth - 8;
-        const maxY = window.innerHeight - icon.offsetHeight - 8;
-        if (x > maxX) icon.style.left = maxX + 'px';
-        if (y > maxY) icon.style.top = maxY + 'px';
-      });
-    });
+        function startDrift() {
+            const icons = document.querySelectorAll('.icon');
+            function drift(t) {
+                icons.forEach((icon, i) => {
+                    const amp = 6;
+                    const speed = 0.0003 + (i % 7) * 0.00005;
+                    const dx = Math.sin((t * speed) + (i)) * amp;
+                    const dy = Math.cos((t * speed * 1.1) + (i)) * amp * 0.6;
+                    icon.style.transform = `translate(${dx}px,${dy}px)`;
+                });
+                requestAnimationFrame(drift);
+            }
+            requestAnimationFrame(drift);
+        }
 
-    // Keyboard shortcuts
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        closeProjectModal();
-        aboutOverlay.classList.remove('visible');
-        aboutOverlay.setAttribute('aria-hidden', 'true');
-      }
-    });
+        // Skills
+        async function loadSkills() {
+            try {
+                const response = await fetch('skills.json');
+                if (!response.ok) throw new Error('Failed to load skills');
+                
+                const data = await response.json();
+                displaySkills(data.skills);
+            } catch (error) {
+                console.error('Error loading skills:', error);
+                galleryGrid.innerHTML = '<div class="error-message">Unable to load skills. Please ensure skills.json exists.</div>';
+            }
+        }
 
-    // Resume download
-    document.getElementById('resumeBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      alert('Add your resume PDF to the site and update the href:\n\n<a href="path/to/your-resume.pdf" download>Resume</a>');
-    });
-  </script>
+        function displaySkills(skills) {
+            galleryGrid.innerHTML = '';
+            
+            if (!skills || skills.length === 0) {
+                galleryGrid.innerHTML = '<div class="error-message">No skills found.</div>';
+                return;
+            }
+
+            skills.forEach(skill => {
+                const item = document.createElement('div');
+                item.className = 'skill-item';
+                item.innerHTML = `
+                    <div class="skill-icon">
+                        <img src="${skill.icon}" alt="${skill.name}">
+                    </div>
+                    <div class="skill-name">${skill.name}</div>
+                `;
+                galleryGrid.appendChild(item);
+            });
+        }
+
+        // CV
+        function loadCV() {
+            galleryGrid.innerHTML = '';
+            galleryGrid.style.gridTemplateColumns = '1fr';
+            
+            const iframe = document.createElement('iframe');
+            iframe.className = 'cv-viewer';
+            iframe.src = 'cv.pdf';
+            
+            galleryGrid.appendChild(iframe);
+        }
+
+        // Email
+        function openEmail() {
+            window.location.href = 'mailto:your.email@example.com?subject=Portfolio Inquiry';
+        }
+
+        // Show views with transition
+        function showDesktop() {
+            transitionScreen.classList.add('active');
+            
+            setTimeout(() => {
+                mainScreen.style.display = 'none';
+                transitionScreen.classList.remove('active');
+                desktopView.classList.add('active');
+                loadProjects();
+            }, 800);
+        }
+
+        function showGallery(type) {
+            transitionScreen.classList.add('active');
+            
+            setTimeout(() => {
+                mainScreen.style.display = 'none';
+                transitionScreen.classList.remove('active');
+                galleryView.classList.add('active');
+                
+                if (type === 'skills') {
+                    loadSkills();
+                } else if (type === 'about') {
+                    loadCV();
+                }
+            }, 800);
+        }
+
+        function hideAllViews() {
+            desktopView.classList.remove('active');
+            galleryView.classList.remove('active');
+            mainScreen.style.display = 'block';
+        }
+
+        // Menu navigation
+        menuItems.forEach((item, index) => {
+            item.addEventListener('click', () => {
+                currentIndex = index;
+                setActive(currentIndex);
+                
+                const section = item.dataset.section;
+                if (section === 'contact') {
+                    openEmail();
+                } else if (section === 'projects') {
+                    showDesktop();
+                } else {
+                    showGallery(section);
+                }
+            });
+        });
+
+        desktopBackBtn.addEventListener('click', hideAllViews);
+        galleryBackBtn.addEventListener('click', hideAllViews);
+
+        // Touch swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (desktopView.classList.contains('active') || galleryView.classList.contains('active')) return;
+            
+            if (touchEndX < touchStartX - 50 && currentIndex < menuItems.length - 1) {
+                currentIndex++;
+                setActive(currentIndex);
+            }
+            
+            if (touchEndX > touchStartX + 50 && currentIndex > 0) {
+                currentIndex--;
+                setActive(currentIndex);
+            }
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            if (lightbox.classList.contains('visible')) {
+                if (e.key === 'Escape') lightbox.classList.remove('visible');
+                return;
+            }
+
+            if (desktopView.classList.contains('active') || galleryView.classList.contains('active')) {
+                if (e.key === 'Escape') hideAllViews();
+                return;
+            }
+
+            if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                currentIndex--;
+                setActive(currentIndex);
+            } else if (e.key === 'ArrowRight' && currentIndex < menuItems.length - 1) {
+                currentIndex++;
+                setActive(currentIndex);
+            } else if (e.key === 'Enter') {
+                const section = menuItems[currentIndex].dataset.section;
+                if (section === 'contact') {
+                    openEmail();
+                } else if (section === 'projects') {
+                    showDesktop();
+                } else {
+                    showGallery(section);
+                }
+            }
+        });
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.icon').forEach(icon => {
+                const x = parseFloat(icon.style.left) || 0;
+                const y = parseFloat(icon.style.top) || 0;
+                const maxX = window.innerWidth - icon.offsetWidth - 8;
+                const maxY = window.innerHeight - icon.offsetHeight - 8;
+                if (x > maxX) icon.style.left = maxX + 'px';
+                if (y > maxY) icon.style.top = maxY + 'px';
+            });
+        });
+    </script>
 </body>
 </html>
