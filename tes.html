@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>d0nt.blinkk — Creative Portfolio</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+  <style>
+    :root{
+      --bg-light: linear-gradient(180deg,#e8ecf1 0%,#d4dae3 100%);
+      --bg-dark: linear-gradient(180deg,#0a0d14 0%,#141822 100%);
+      --glass-light: rgba(255,255,255,0.4);
+      --glass-dark: rgba(20,25,35,0.5);
+      --accent: #6366f1;
+      --ease: cubic-bezier(.25,.1,.25,1);
+      --ease-bounce: cubic-bezier(.34,1.56,.64,1);
+    }
+    html,body{margin:0;font-family:"IBM Plex Mono",monospace;overflow-x:hidden;scroll-behavior:smooth}
+    body.light{background:var(--bg-light);color:#000}
+    body.dark{background:var(--bg-dark);color:#f3f4f8}
+
+    /* Hero Section */
+    .hero{
+      min-height:85vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:60px 5vw;
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:radial-gradient(circle at 50% 50%, rgba(99,102,241,.15), transparent 70%);
+      pointer-events:none;
+    }
+    .hero h1{
+      font-size:clamp(2.5rem, 8vw, 5rem);
+      margin:0 0 16px;
+      font-weight:700;
+      letter-spacing:-1px;
+      background:linear-gradient(135deg, #6366f1, #ec4899);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+    }
+    .hero .tagline{
+      font-size:clamp(1rem, 2.5vw, 1.4rem);
+      opacity:.8;
+      margin:0 0 32px;
+      max-width:600px;
+    }
+    .hero .cta-group{
+      display:flex;
+      gap:16px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .btn{
+      padding:14px 32px;
+      border-radius:10px;
+      font-family:inherit;
+      font-size:1rem;
+      cursor:pointer;
+      transition:all .3s var(--ease);
+      text-decoration:none;
+      display:inline-block;
+      font-weight:500;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:#fff;
+      border:2px solid var(--accent);
+    }
+    .btn-primary:hover{
+      background:transparent;
+      transform:translateY(-2px);
+      box-shadow:0 8px 20px rgba(99,102,241,.3);
+    }
+    .btn-secondary{
+      background:transparent;
+      border:2px solid currentColor;
+      color:inherit;
+    }
+    body.dark .btn-secondary{color:#f3f4f8}
+    .btn-secondary:hover{
+      background:rgba(99,102,241,.1);
+      transform:translateY(-2px);
+    }
+    .scroll-indicator{
+      position:absolute;
+      bottom:40px;
+      left:50%;
+      transform:translateX(-50%);
+      animation:bounce 2s infinite;
+      opacity:.6;
+      font-size:24px;
+    }
+    @keyframes bounce{
+      0%, 100%{transform:translateX(-50%) translateY(0)}
+      50%{transform:translateX(-50%) translateY(10px)}
+    }
+
+    /* Navigation */
+    .nav{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      background:rgba(255,255,255,.85);
+      backdrop-filter:blur(12px);
+      padding:16px 5vw;
+      box-shadow:0 2px 12px rgba(0,0,0,.08);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      transition:all .3s var(--ease);
+    }
+    body.dark .nav{
+      background:rgba(10,13,20,.9);
+      box-shadow:0 2px 12px rgba(0,0,0,.3);
+    }
+    .nav-logo{
+      font-weight:700;
+      font-size:1.1rem;
+      letter-spacing:1px;
+    }
+    .nav-links{
+      display:flex;
+      gap:24px;
+      align-items:center;
+    }
+    .nav-links a, .nav-links button{
+      color:inherit;
+      text-decoration:none;
+      font-size:.9rem;
+      font-weight:500;
+      cursor:pointer;
+      background:none;
+      border:none;
+      font-family:inherit;
+      transition:opacity .2s;
+    }
+    .nav-links a:hover, .nav-links button:hover{opacity:.7}
+
+    /* Filter Section */
+    .filter-section{
+      padding:40px 5vw 20px;
+      max-width:1600px;
+      margin:0 auto;
+    }
+    .filter-section h2{
+      font-size:2rem;
+      margin:0 0 24px;
+    }
+    .filter-chips{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom:32px;
+    }
+    .chip{
+      padding:10px 20px;
+      border-radius:24px;
+      background:rgba(99,102,241,.1);
+      border:2px solid transparent;
+      cursor:pointer;
+      font-family:inherit;
+      font-size:.9rem;
+      transition:all .2s var(--ease);
+      color:inherit;
+    }
+    .chip:hover{
+      background:rgba(99,102,241,.2);
+    }
+    .chip.active{
+      background:var(--accent);
+      color:#fff;
+      border-color:var(--accent);
+    }
+
+    /* Gallery Grid */
+    .gallery-container{
+      padding:0 5vw 80px;
+      max-width:1600px;
+      margin:0 auto;
+    }
+    .gallery-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+      gap:24px;
+    }
+    .project-card{
+      position:relative;
+      aspect-ratio:4/3;
+      cursor:pointer;
+      border-radius:12px;
+      overflow:hidden;
+      background:#000;
+      transition:transform .3s var(--ease-bounce);
+    }
+    .project-card:hover{
+      transform:scale(1.05);
+      z-index:10;
+    }
+    .project-card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transition:transform .4s var(--ease), opacity .3s var(--ease);
+    }
+    .project-card:hover img{
+      transform:scale(1.08);
+      opacity:.7;
+    }
+    .project-overlay{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(to top, rgba(0,0,0,.9) 0%, rgba(0,0,0,.3) 60%, transparent);
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      padding:20px;
+      opacity:0;
+      transition:opacity .3s var(--ease);
+    }
+    .project-card:hover .project-overlay{
+      opacity:1;
+    }
+    .project-glass{
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(236,72,153,0.1) 100%);
+      backdrop-filter:blur(0px);
+      opacity:0;
+      transition:all .3s var(--ease);
+    }
+    .project-card:hover .project-glass{
+      opacity:1;
+      backdrop-filter:blur(4px);
+    }
+    .project-info{
+      position:relative;
+      z-index:2;
+    }
+    .project-title{
+      font-size:1.2rem;
+      font-weight:600;
+      margin:0 0 6px;
+      color:#fff;
+    }
+    .project-meta{
+      font-size:.85rem;
+      opacity:.9;
+      color:#fff;
+      margin:0 0 8px;
+    }
+    .project-tags{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .tag{
+      padding:4px 10px;
+      background:rgba(255,255,255,.2);
+      backdrop-filter:blur(10px);
+      border-radius:12px;
+      font-size:.75rem;
+      color:#fff;
+    }
+
+    /* Project Detail Modal */
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:3000;
+      background:rgba(0,0,0,.92);
+      backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      overflow-y:auto;
+    }
+    .modal.visible{display:flex}
+    .modal-content{
+      max-width:900px;
+      width:100%;
+      background:rgba(255,255,255,.95);
+      backdrop-filter:blur(20px);
+      border-radius:16px;
+      overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+      animation:slideUp .4s var(--ease);
+    }
+    body.dark .modal-content{
+      background:rgba(20,25,35,.95);
+    }
+    @keyframes slideUp{
+      from{transform:translateY(30px);opacity:0}
+      to{transform:translateY(0);opacity:1}
+    }
+    .modal-image{
+      width:100%;
+      max-height:60vh;
+      object-fit:cover;
+    }
+    .modal-body{
+      padding:32px;
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:20px;
+    }
+    .modal-title{
+      font-size:2rem;
+      margin:0 0 8px;
+    }
+    .close-btn{
+      background:rgba(0,0,0,.1);
+      border:none;
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      cursor:pointer;
+      font-size:1.5rem;
+      transition:all .2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .close-btn:hover{
+      background:rgba(0,0,0,.2);
+      transform:rotate(90deg);
+    }
+    .modal-meta{
+      display:flex;
+      gap:24px;
+      margin-bottom:24px;
+      flex-wrap:wrap;
+      font-size:.9rem;
+      opacity:.8;
+    }
+    .meta-item{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .meta-label{
+      font-weight:600;
+      opacity:.6;
+      font-size:.8rem;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+    .modal-description{
+      line-height:1.7;
+      margin-bottom:24px;
+    }
+
+    /* About Section */
+    .about-section{
+      padding:80px 5vw;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .about-content{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:60px;
+      align-items:center;
+    }
+    .about-text h2{
+      font-size:2.5rem;
+      margin:0 0 24px;
+    }
+    .about-text p{
+      line-height:1.8;
+      opacity:.9;
+      margin-bottom:16px;
+    }
+    .about-image{
+      aspect-ratio:1;
+      border-radius:16px;
+      overflow:hidden;
+      background:rgba(99,102,241,.1);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .about-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    /* Contact Section */
+    .contact-section{
+      padding:80px 5vw;
+      text-align:center;
+      background:rgba(99,102,241,.05);
+    }
+    body.dark .contact-section{
+      background:rgba(99,102,241,.08);
+    }
+    .contact-section h2{
+      font-size:2.5rem;
+      margin:0 0 16px;
+    }
+    .contact-section p{
+      opacity:.8;
+      margin-bottom:32px;
+    }
+    .contact-links{
+      display:flex;
+      gap:16px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    /* Footer */
+    .footer{
+      padding:32px 5vw;
+      text-align:center;
+      font-size:.9rem;
+      opacity:.7;
+      border-top:1px solid rgba(0,0,0,.1);
+    }
+    body.dark .footer{
+      border-top-color:rgba(255,255,255,.1);
+    }
+
+    @media (max-width:768px){
+      .gallery-grid{
+        grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+        gap:16px;
+      }
+      .about-content{
+        grid-template-columns:1fr;
+        gap:40px;
+      }
+      .nav-links{gap:16px}
+      .filter-section h2{font-size:1.5rem}
+    }
+  </style>
+</head>
+<body class="dark">
+  
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <h1>d0nt.blinkk</h1>
+    <p class="tagline">A multifaceted artist exploring ideas through motion, identity and digital form.</p>
+    <div class="cta-group">
+      <a href="#work" class="btn btn-primary">View Work</a>
+      <a href="#contact" class="btn btn-secondary">Get in Touch</a>
+    </div>
+    <div class="scroll-indicator">↓</div>
+  </section>
+
+  <!-- Sticky Navigation -->
+  <nav class="nav">
+    <div class="nav-logo">d0nt.blinkk</div>
+    <div class="nav-links">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <button id="themeToggle">☀️</button>
+    </div>
+  </nav>
+
+  <!-- Filter Section -->
+  <section class="filter-section" id="work">
+    <h2>Featured Work</h2>
+    <div class="filter-chips">
+      <button class="chip active" data-filter="all">All Projects</button>
+      <button class="chip" data-filter="motion">Motion Design</button>
+      <button class="chip" data-filter="photography">Photography</button>
+      <button class="chip" data-filter="digital">Digital Art</button>
+      <button class="chip" data-filter="3d">3D</button>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <section class="gallery-container">
+    <div class="gallery-grid" id="gallery"></div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about-section" id="about">
+    <div class="about-content">
+      <div class="about-text">
+        <h2>About Tate</h2>
+        <p>I'm a multifaceted creative exploring the intersection of motion, identity, and digital form. My work spans photography, motion design, 3D art, and digital experimentation.</p>
+        <p>Based in the creative cosmos, I craft visual experiences that challenge perception and invite viewers into new ways of seeing.</p>
+        <p>Each project is an exploration—a moment captured, transformed, and reimagined through my lens.</p>
+      </div>
+      <div class="about-image">
+        <div style="font-size:80px;opacity:.3">👁️</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact-section" id="contact">
+    <h2>Let's Collaborate</h2>
+    <p>I'm always open to new projects and creative partnerships.</p>
+    <div class="contact-links">
+      <a href="mailto:chorumz@gmail.com" class="btn btn-primary">Email Me</a>
+      <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener" class="btn btn-secondary">Instagram</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    © 2026 d0nt.blinkk — All rights reserved
+  </footer>
+
+  <!-- Project Detail Modal -->
+  <div class="modal" id="projectModal">
+    <div class="modal-content">
+      <img id="modalImage" class="modal-image" src="" alt="">
+      <div class="modal-body">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title" id="modalTitle"></h2>
+            <div class="modal-meta" id="modalMeta"></div>
+          </div>
+          <button class="close-btn" id="closeModal">×</button>
+        </div>
+        <div class="modal-description" id="modalDescription"></div>
+        <div class="project-tags" id="modalTags"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample project data - replace with your actual data or load from JSON
+    const projects = [
+      {
+        id: 1,
+        title: "Ethereal Movements",
+        filename: "project1.jpg",
+        category: "motion",
+        year: "2025",
+        medium: "Motion Design",
+        client: "Personal",
+        description: "An exploration of fluid dynamics and organic movement patterns. This piece investigates the boundary between digital and natural forms, creating a hypnotic visual experience that evolves over time.",
+        tags: ["Motion", "Abstract", "Experimental"]
+      },
+      {
+        id: 2,
+        title: "Urban Reflections",
+        filename: "project2.jpg",
+        category: "photography",
+        year: "2024",
+        medium: "Photography",
+        client: "Editorial",
+        description: "A photographic series capturing the interplay of light, shadow, and architecture in urban environments. Each frame reveals hidden geometries and unexpected beauty in everyday cityscapes.",
+        tags: ["Photography", "Urban", "Architecture"]
+      },
+      {
+        id: 3,
+        title: "Digital Consciousness",
+        filename: "project3.jpg",
+        category: "digital",
+        year: "2025",
+        medium: "Digital Art",
+        client: "Gallery Commission",
+        description: "A meditation on identity in the digital age. This artwork explores themes of self-perception, digital avatars, and the fragmented nature of online presence.",
+        tags: ["Digital Art", "Conceptual", "Identity"]
+      },
+      {
+        id: 4,
+        title: "Dimensional Shift",
+        filename: "project4.jpg",
+        category: "3d",
+        year: "2025",
+        medium: "3D Render",
+        client: "Brand Collaboration",
+        description: "A series of 3D compositions that challenge spatial perception. Using abstract forms and dynamic lighting, these renders create impossible spaces that exist only in the digital realm.",
+        tags: ["3D", "Render", "Abstract"]
+      },
+      {
+        id: 5,
+        title: "Neon Dreams",
+        filename: "project5.jpg",
+        category: "photography",
+        year: "2024",
+        medium: "Photography",
+        client: "Personal",
+        description: "Capturing the vibrant energy of nighttime cityscapes through long exposures and neon reflections. A visual love letter to urban nights.",
+        tags: ["Photography", "Night", "Urban"]
+      },
+      {
+        id: 6,
+        title: "Flow State",
+        filename: "project6.jpg",
+        category: "motion",
+        year: "2025",
+        medium: "Motion Design",
+        client: "Music Video",
+        description: "An animated visual accompaniment exploring states of consciousness and creative flow. Merging organic and geometric elements into a cohesive visual narrative.",
+        tags: ["Motion", "Animation", "Music"]
+      }
+    ];
+
+    const gallery = document.getElementById('gallery');
+    const modal = document.getElementById('projectModal');
+    const themeToggle = document.getElementById('themeToggle');
+    const filterChips = document.querySelectorAll('.chip');
+    let currentFilter = 'all';
+
+    // Initialize gallery
+    function renderGallery(filter = 'all') {
+      gallery.innerHTML = '';
+      const filtered = filter === 'all' ? projects : projects.filter(p => p.category === filter);
+      
+      filtered.forEach(project => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        card.innerHTML = `
+          <img src="images/${project.filename}" alt="${project.title}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23333%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%23fff%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22monospace%22%3E${project.title}%3C/text%3E%3C/svg%3E'">
+          <div class="project-glass"></div>
+          <div class="project-overlay">
+            <div class="project-info">
+              <h3 class="project-title">${project.title}</h3>
+              <p class="project-meta">${project.medium} · ${project.year}</p>
+              <div class="project-tags">
+                ${project.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        `;
+        
+        card.addEventListener('click', () => openModal(project));
+        gallery.appendChild(card);
+      });
+    }
+
+    // Filter functionality
+    filterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        filterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const filter = chip.dataset.filter;
+        renderGallery(filter);
+      });
+    });
+
+    // Modal functions
+    function openModal(project) {
+      document.getElementById('modalImage').src = `images/${project.filename}`;
+      document.getElementById('modalImage').onerror = function() {
+        this.src = `data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect fill=%22%23333%22 width=%22800%22 height=%22600%22/%3E%3Ctext fill=%22%23fff%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22monospace%22 font-size=%2224%22%3E${project.title}%3C/text%3E%3C/svg%3E`;
+      };
+      document.getElementById('modalTitle').textContent = project.title;
+      document.getElementById('modalMeta').innerHTML = `
+        <div class="meta-item"><span class="meta-label">Year</span>${project.year}</div>
+        <div class="meta-item"><span class="meta-label">Medium</span>${project.medium}</div>
+        <div class="meta-item"><span class="meta-label">Client</span>${project.client}</div>
+      `;
+      document.getElementById('modalDescription').textContent = project.description;
+      document.getElementById('modalTags').innerHTML = project.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+      modal.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // Theme toggle
+    themeToggle.addEventListener('click', () => {
+      if (document.body.classList.contains('dark')) {
+        document.body.classList.remove('dark');
+        document.body.classList.add('light');
+        themeToggle.textContent = '🌙';
+      } else {
+        document.body.classList.remove('light');
+        document.body.classList.add('dark');
+        themeToggle.textContent = '☀️';
+      }
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Initialize
+    renderGallery();
+
+    // Optional: Load from images.json if you want dynamic loading
+    /*
+    fetch('images.json')
+      .then(r => r.json())
+      .then(images => {
+        // Map your images to project format
+        const dynamicProjects = images.map((filename, i) => ({
+          id: i,
+          title: filename.replace(/\.[^/.]+$/, ''),
+          filename: filename,
+          category: 'all',
+          year: '2025',
+          medium: 'Mixed Media',
+          client: 'Personal',
+          description: 'Project description here.',
+          tags: ['Art', 'Creative']
+        }));
+        projects = dynamicProjects;
+        renderGallery();
+      });
+    */
+  </script>
+</body>
+</html>
