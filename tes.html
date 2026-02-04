@@ -25,6 +25,7 @@
       width: 100%;
       height: 100%;
       cursor: grab;
+      outline: none;
     }
     #canvas-container.grabbing {
       cursor: grabbing;
@@ -130,6 +131,7 @@
       max-height: 90vh;
       border-radius: 8px;
       box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+      display: block; /* Removes bottom spacing */
     }
     .lightbox-close {
       position: absolute;
@@ -172,6 +174,7 @@
       padding: 32px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.1);
+      margin: 20px;
     }
     .about-card h3 {
       margin: 0 0 16px;
@@ -252,11 +255,10 @@
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
 
-    const RADIUS = 8;
-    const COVER_WIDTH = 3;
-    const COVER_HEIGHT = 3;
-    const ANGLE_TILT = Math.PI / 3;
-
+    // CONFIGURATION
+    const RADIUS = 9; 
+    const BASE_HEIGHT = 4.5; // Max height of an image in world units
+    
     // Load images
     fetch('images.json')
       .then(r => r.json())
@@ -265,21 +267,30 @@
         init();
         animate();
       })
-      .catch(err => console.error('Failed to load images:', err));
+      .catch(err => {
+        console.error('Failed to load images:', err);
+        // Fallback for testing if json fails
+        images = ['placeholder.jpg', 'placeholder.jpg', 'placeholder.jpg', 'placeholder.jpg', 'placeholder.jpg'];
+        init();
+        animate();
+      });
 
     function init() {
       // Scene
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0a0a0a);
+      scene.background = new THREE.Color(0x050505);
+      
+      // Fog for depth fading
+      scene.fog = new THREE.FogExp2(0x050505, 0.04);
 
       // Camera
       camera = new THREE.PerspectiveCamera(
-        50,
+        45, // Slightly narrower FOV for less distortion
         window.innerWidth / window.innerHeight,
         0.1,
         1000
       );
-      camera.position.set(0, 0, 12);
+      camera.position.set(0, 0, 16);
       camera.lookAt(0, 0, 0);
 
       // Renderer
@@ -289,12 +300,16 @@
       container.appendChild(renderer.domElement);
 
       // Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
       scene.add(ambientLight);
 
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(5, 5, 5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(0, 10, 10);
       scene.add(directionalLight);
+      
+      const pointLight = new THREE.PointLight(0x58a6ff, 0.5, 20);
+      pointLight.position.set(0, 0, 10);
+      scene.add(pointLight);
 
       // Create covers
       createCovers();
@@ -310,30 +325,41 @@
       const angleStep = (Math.PI * 2) / images.length;
 
       images.forEach((filename, index) => {
-        const geometry = new THREE.PlaneGeometry(COVER_WIDTH, COVER_HEIGHT);
+        // Use a 1x1 geometry so we can scale it perfectly to any aspect ratio later
+        const geometry = new THREE.PlaneGeometry(1, 1);
         
-        // Load texture
-        const texture = textureLoader.load(`images/${filename}`);
+        // Initial Aspect Ratio (Square fallback)
+        let aspectRatio = 1.0; 
+
+        // Load texture with callback to get dimensions
+        const texture = textureLoader.load(`images/${filename}`, (tex) => {
+            // Once loaded, calculate real aspect ratio
+            if(tex.image.width && tex.image.height) {
+                aspectRatio = tex.image.width / tex.image.height;
+                mesh.userData.aspectRatio = aspectRatio; // Store it on mesh
+            }
+        });
+
         texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.colorSpace = THREE.SRGBColorSpace;
         
         const material = new THREE.MeshStandardMaterial({
           map: texture,
           side: THREE.DoubleSide,
           metalness: 0.1,
-          roughness: 0.8
+          roughness: 0.4
         });
 
         const mesh = new THREE.Mesh(geometry, material);
         
-        // Position in circle
-        const angle = index * angleStep;
-        const x = Math.sin(angle) * RADIUS;
-        const z = Math.cos(angle) * RADIUS;
-        
-        mesh.position.set(x, 0, z);
-        mesh.lookAt(0, 0, 0);
-        
-        mesh.userData = { index, filename, baseAngle: angle };
+        // Store metadata
+        mesh.userData = { 
+            index, 
+            filename, 
+            baseAngle: index * angleStep,
+            aspectRatio: 1.0 // Default, updated when texture loads
+        };
         
         scene.add(mesh);
         coverMeshes.push(mesh);
@@ -342,11 +368,8 @@
 
     function setupEventListeners() {
       // Mouse events
-      let startX = 0;
-      
       container.addEventListener('mousedown', (e) => {
         isDragging = true;
-        startX = e.clientX;
         previousMouseX = e.clientX;
         velocity = 0;
         container.classList.add('grabbing');
@@ -356,7 +379,7 @@
         if (!isDragging) return;
         
         const deltaX = e.clientX - previousMouseX;
-        const sensitivity = 0.005;
+        const sensitivity = 0.003;
         
         targetRotation += deltaX * sensitivity;
         velocity = deltaX * sensitivity;
@@ -364,25 +387,18 @@
         previousMouseX = e.clientX;
       });
 
-      window.addEventListener('mouseup', (e) => {
+      window.addEventListener('mouseup', () => {
         if (!isDragging) return;
-        
         isDragging = false;
         container.classList.remove('grabbing');
-        
-        // Snap to nearest
-        const angleStep = (Math.PI * 2) / images.length;
-        const targetIndex = Math.round(targetRotation / angleStep);
-        targetRotation = targetIndex * angleStep;
+        snapToNearest();
       });
 
       // Touch events
-      let touchStartX = 0;
       let previousTouchX = 0;
 
       container.addEventListener('touchstart', (e) => {
         isDragging = true;
-        touchStartX = e.touches[0].clientX;
         previousTouchX = e.touches[0].clientX;
         velocity = 0;
       });
@@ -401,12 +417,8 @@
 
       container.addEventListener('touchend', () => {
         if (!isDragging) return;
-        
         isDragging = false;
-        
-        const angleStep = (Math.PI * 2) / images.length;
-        const targetIndex = Math.round(targetRotation / angleStep);
-        targetRotation = targetIndex * angleStep;
+        snapToNearest();
       });
 
       // Wheel event
@@ -420,40 +432,25 @@
         targetRotation += delta * sensitivity;
         
         clearTimeout(wheelTimeout);
-        wheelTimeout = setTimeout(() => {
-          const angleStep = (Math.PI * 2) / images.length;
-          const targetIndex = Math.round(targetRotation / angleStep);
-          targetRotation = targetIndex * angleStep;
-        }, 100);
+        wheelTimeout = setTimeout(snapToNearest, 100);
       }, { passive: false });
 
       // Keyboard
       document.addEventListener('keydown', (e) => {
         if (lightbox.classList.contains('visible')) {
-          if (e.key === 'Escape') {
-            lightbox.classList.remove('visible');
-          } else if (e.key === 'ArrowLeft') {
-            e.preventDefault();
-            const angleStep = (Math.PI * 2) / images.length;
-            targetRotation += angleStep;
-          } else if (e.key === 'ArrowRight') {
-            e.preventDefault();
-            const angleStep = (Math.PI * 2) / images.length;
-            targetRotation -= angleStep;
-          }
+          if (e.key === 'Escape') lightbox.classList.remove('visible');
           return;
         }
         
+        const angleStep = (Math.PI * 2) / images.length;
+        
         if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          const angleStep = (Math.PI * 2) / images.length;
           targetRotation += angleStep;
+          snapToNearest();
         } else if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          const angleStep = (Math.PI * 2) / images.length;
           targetRotation -= angleStep;
+          snapToNearest();
         } else if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
           const centerIndex = getCurrentCenterIndex();
           showLightbox(centerIndex);
         }
@@ -480,9 +477,16 @@
           if (clickedIndex === centerIndex) {
             showLightbox(clickedIndex);
           } else {
+            // Calculate shortest path to rotation
             const angleStep = (Math.PI * 2) / images.length;
-            const angleDiff = (clickedIndex - centerIndex) * angleStep;
-            targetRotation -= angleDiff;
+            let diff = clickedIndex - centerIndex;
+            
+            // Optimize path across the wrap-around point
+            if (Math.abs(diff) > images.length / 2) {
+                diff = diff > 0 ? diff - images.length : diff + images.length;
+            }
+            
+            targetRotation -= diff * angleStep;
           }
         }
       });
@@ -495,18 +499,24 @@
       });
     }
 
+    function snapToNearest() {
+        const angleStep = (Math.PI * 2) / images.length;
+        const targetIndex = Math.round(targetRotation / angleStep);
+        targetRotation = targetIndex * angleStep;
+    }
+
     function animate() {
       requestAnimationFrame(animate);
 
       // Smooth rotation with easing
       if (!isDragging) {
         const diff = targetRotation - currentRotation;
-        currentRotation += diff * 0.15;
+        currentRotation += diff * 0.1;
         velocity *= 0.9;
       }
 
       // Update cover positions and rotations
-      coverMeshes.forEach((mesh, index) => {
+      coverMeshes.forEach((mesh) => {
         const baseAngle = mesh.userData.baseAngle;
         const angle = baseAngle + currentRotation;
         
@@ -515,21 +525,36 @@
         
         mesh.position.set(x, 0, z);
         
-        // Rotation - front cover faces camera, side covers angled
-        const rotationY = -angle;
-        const normalizedZ = z / RADIUS;
-        const tiltAmount = normalizedZ > 0 ? ANGLE_TILT * (1 - Math.abs(normalizedZ)) : 0;
+        // Simplified Rotation: Just face the center (0,0,0)
+        // This removes the "wonky" tilt effect
+        mesh.lookAt(0, 0, 0);
         
-        mesh.rotation.y = rotationY + (x > 0 ? -tiltAmount : tiltAmount);
+        // Scale logic to preserve aspect ratio
+        // We scale based on distance (closer = bigger)
+        // Normalized Z goes from -Radius to +Radius
+        // +Radius is close to camera, -Radius is far
         
-        // Scale and opacity based on position
-        const distanceFromCenter = Math.abs(z - RADIUS);
-        const scale = 1 - (distanceFromCenter / (RADIUS * 2)) * 0.3;
-        mesh.scale.set(scale, scale, 1);
+        const scaleFactor = 1.0; 
         
-        const opacity = z > 0 ? 1 : Math.max(0.3, 1 - (Math.abs(z) / RADIUS) * 0.5);
-        mesh.material.opacity = opacity;
-        mesh.material.transparent = opacity < 1;
+        // Calculate dynamic dimensions based on aspect ratio
+        const ar = mesh.userData.aspectRatio;
+        
+        // We fix the HEIGHT, and let WIDTH adjust
+        // If image is portrait (ar < 1), height is BASE_HEIGHT
+        // If image is landscape (ar > 1), we might want to cap width instead?
+        // Let's stick to fixing height for a clean gallery feel
+        
+        mesh.scale.y = BASE_HEIGHT * scaleFactor;
+        mesh.scale.x = (BASE_HEIGHT * ar) * scaleFactor;
+
+        // Opacity/Fade based on depth
+        // normalize z from -RADIUS to RADIUS into 0 to 1
+        const depth = (z + RADIUS) / (RADIUS * 2);
+        // ease the opacity
+        const opacity = Math.pow(depth, 3); // sharper falloff
+        
+        mesh.material.opacity = Math.max(0.1, opacity);
+        mesh.material.transparent = true;
       });
 
       updateDisplay();
@@ -544,17 +569,20 @@
 
     function updateDisplay() {
       const centerIndex = getCurrentCenterIndex();
-      const filename = images[centerIndex];
-      
-      if (filename) {
-        coverTitle.textContent = filename.replace(/\.[^/.]+$/, '');
-        coverIndex.textContent = `${centerIndex + 1} of ${images.length}`;
+      if(images.length > 0) {
+        const filename = images[centerIndex];
+        if (filename) {
+          coverTitle.textContent = filename.replace(/\.[^/.]+$/, '');
+          coverIndex.textContent = `${centerIndex + 1} of ${images.length}`;
+        }
       }
     }
 
     function showLightbox(index) {
-      lightboxImg.src = `images/${images[index]}`;
-      lightbox.classList.add('visible');
+      if(images[index]) {
+        lightboxImg.src = `images/${images[index]}`;
+        lightbox.classList.add('visible');
+      }
     }
 
     // Lightbox controls
