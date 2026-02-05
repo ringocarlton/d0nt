@@ -1,274 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>d0nt.blinkk</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d0nt.blinkk</title>
+    
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-<style>
-* { margin:0; padding:0; box-sizing:border-box; }
+    <style>
+        body {
+            background-color: #050505;
+            color: white;
+            overflow: hidden;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* 3D Transform Utilities */
+        .perspective-container {
+            perspective: 1400px;
+        }
+        
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        
+        /* Reflection Effect */
+        /* Applied to the container so it reflects whatever face is showing */
+        .reflect-below {
+            -webkit-box-reflect: below 10px linear-gradient(to bottom, transparent, transparent 80%, rgba(255,255,255,0.2));
+        }
 
-html, body {
-  height:100%;
-  overflow:hidden;
-  font-family:"Helvetica Neue", Arial, sans-serif;
-  background:#050505;
-  color:#fff;
-  -webkit-font-smoothing:antialiased;
-}
-
-/* ===== GALLERY ===== */
-.gallery {
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:grab;
-  perspective:1400px;
-}
-
-.gallery.grabbing { cursor:grabbing; }
-
-ul.cards {
-  list-style:none;
-  position:relative;
-  width:100%;
-  height:60vh;
-}
-
-ul.cards li {
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:35vh;
-  height:50vh;
-  transform-style:preserve-3d;
-  will-change:transform, opacity;
-}
-
-/* ===== IMAGES ===== */
-ul.cards li img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:10px;
-  box-shadow:0 20px 60px rgba(0,0,0,0.6);
-  pointer-events:none;
-  display:block;
-
-  /* Reflection */
-  -webkit-box-reflect: below 8px
-    linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.3),
-      rgba(0,0,0,0.7)
-    );
-}
-
-/* ===== UI ===== */
-.header {
-  position:fixed;
-  top:20px;
-  left:30px;
-  z-index:100;
-  font-weight:700;
-  letter-spacing:1px;
-}
-
-.info-display {
-  position:fixed;
-  bottom:80px;
-  left:50%;
-  transform:translateX(-50%);
-  text-align:center;
-  z-index:100;
-}
-
-.cover-title { font-size:22px; margin-bottom:6px; }
-.cover-index { font-size:12px; opacity:0.5; }
-</style>
-</head>
-
-<body>
-
-<div class="gallery" id="gallery">
-  <ul class="cards" id="cards-container"></ul>
-</div>
-
-<div class="header">d0nt.blinkk</div>
-
-<div class="info-display">
-  <div class="cover-title" id="coverTitle">Loading...</div>
-  <div class="cover-index" id="coverIndex"></div>
-</div>
-
-<script>
-const CONFIG = {
-  sensitivity: 1.5,
-  friction: 0.95,
-  gap: 60,
-  scaleSpread: 0.5,
-  opacitySpread: 0.5
-};
-
-let images = [];
-let items = [];
-let scrollPos = 0;
-let targetScrollPos = 0;
-let isDragging = false;
-let lastX = 0;
-let velocity = 0;
-let rafId;
-let cardWidth = 0;
-let totalWidth = 0;
-
-const container = document.getElementById('cards-container');
-const gallery = document.getElementById('gallery');
-const titleEl = document.getElementById('coverTitle');
-const indexEl = document.getElementById('coverIndex');
-
-/* ===== LOAD IMAGES ===== */
-fetch('images.json')
-  .then(r => r.json())
-  .then(data => {
-    images = data;
-    init();
-    animate();
-  })
-  .catch(() => {
-    images = ['placeholder.jpg','placeholder.jpg','placeholder.jpg'];
-    init();
-    animate();
-  });
-
-function init() {
-  container.innerHTML = '';
-  items = [];
-
-  images.forEach((src, i) => {
-    const li = document.createElement('li');
-    const img = document.createElement('img');
-    img.src = `images/${src}`;
-    img.draggable = false;
-    li.appendChild(img);
-    container.appendChild(li);
-
-    items.push({
-      el: li,
-      index: i,
-      title: src.replace(/\.[^/.]+$/, '')
-    });
-  });
-
-  updateDimensions();
-  window.addEventListener('resize', updateDimensions);
-}
-
-function updateDimensions() {
-  if(items.length > 0){
-    cardWidth = items[0].el.offsetWidth + CONFIG.gap;
-    totalWidth = cardWidth * items.length;
+        /* Hide scrollbar */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
   }
-}
-
-/* ===== INTERACTION ===== */
-function start(x){
-  isDragging = true;
-  lastX = x;
-  velocity = 0;
-  gallery.classList.add('grabbing');
-  cancelAnimationFrame(rafId);
-  animate();
-}
-
-function move(x){
-  if(!isDragging) return;
-  const delta = x - lastX;
-  targetScrollPos += delta * CONFIG.sensitivity;
-  velocity = delta * CONFIG.sensitivity;
-  lastX = x;
-}
-
-function end(){
-  isDragging = false;
-  gallery.classList.remove('grabbing');
-}
-
-gallery.addEventListener('mousedown', e=>start(e.clientX));
-window.addEventListener('mousemove', e=>move(e.clientX));
-window.addEventListener('mouseup', end);
-
-gallery.addEventListener('touchstart', e=>start(e.touches[0].clientX));
-window.addEventListener('touchmove', e=>move(e.touches[0].clientX));
-window.addEventListener('touchend', end);
-
-gallery.addEventListener('wheel', e=>{
-  e.preventDefault();
-  targetScrollPos -= e.deltaY * 0.6;
-},{passive:false});
-
-/* ===== ANIMATION ===== */
-function animate(){
-
-  if(!isDragging){
-    targetScrollPos += velocity;
-    velocity *= CONFIG.friction;
-
-    if(Math.abs(velocity) < 0.1){
-      const snapIndex = Math.round(targetScrollPos / cardWidth);
-      const snapPos = snapIndex * cardWidth;
-      targetScrollPos += (snapPos - targetScrollPos) * 0.1;
-    }
-  }
-
-  scrollPos += (targetScrollPos - scrollPos) * 0.1;
-
-  let centerIndex = 0;
-  let minDist = Infinity;
-
-  items.forEach((item, i)=>{
-
-    const baseOffset = i * cardWidth;
-    let relativePos = (baseOffset - scrollPos) % totalWidth;
-
-    if(relativePos > totalWidth/2) relativePos -= totalWidth;
-    if(relativePos < -totalWidth/2) relativePos += totalWidth;
-
-    const distance = Math.abs(relativePos);
-    const normalize = Math.max(0, 1 - distance / (window.innerWidth * 0.6));
-
-    const scale = 1 - (1 - normalize) * CONFIG.scaleSpread;
-    const opacity = 1 - (1 - normalize) * CONFIG.opacitySpread;
-
-    const direction = relativePos === 0 ? 0 : relativePos > 0 ? -1 : 1;
-    const rotateY = direction * Math.min(50, distance / 8);
-
-    item.el.style.transform = `
-      translate(-50%, -50%)
-      translateX(${relativePos}px)
-      rotateY(${rotateY}deg)
-      scale(${scale})
-    `;
-
-    item.el.style.opacity = opacity;
-    item.el.style.zIndex = Math.round(normalize * 100);
-
-    if(distance < minDist){
-      minDist = distance;
-      centerIndex = i;
-    }
-  });
-
-  if(items.length){
-    const active = items[centerIndex];
-    titleEl.textContent = active.title;
-    indexEl.textContent = `${active.index+1} of ${items.length}`;
-  }
-
-  rafId = requestAnimationFrame(animate);
 }
 </script>
+</head>
+<body>
+    <div id="root"></div>
 
+    <script type="text/babel">
+        /* --- DATA --- */
+        const CONFIG = {
+            sensitivity: 1.5,
+            friction: 0.95,
+            gap: 60,
+            scaleSpread: 0.5,
+            opacitySpread: 0.5,
+        };
+
+        const GALLERY_ITEMS = [
+            { 
+                id: '1', 
+                title: 'Neon Horizons', 
+                src: 'https://picsum.photos/id/10/800/800', 
+                description: 'A journey through the vibrant lightscapes of a cyberpunk future, exploring the intersection of technology and nature.',
+                year: '2088'
+            },
+            { 
+                id: '2', 
+                title: 'Urban Solitude', 
+                src: 'https://picsum.photos/id/11/800/800', 
+                description: 'Capturing the quiet moments amidst the chaotic rhythm of city life, finding peace in the concrete jungle.',
+                year: '2023'
+            },
+            { 
+                id: '3', 
+                title: 'Coastal Dreams', 
+                src: 'https://picsum.photos/id/12/800/800', 
+                description: 'The eternal dance between the ocean and the shore, painted with the soft hues of a summer sunset.',
+                year: '2024'
+            },
+            { 
+                id: '4', 
+                title: 'Mountain Echo', 
+                src: 'https://picsum.photos/id/13/800/800', 
+                description: 'High altitude peaks where the air is thin and the silence is deafeningly beautiful.',
+                year: '2021'
+            },
+            { 
+                id: '5', 
+                title: 'Forest Whisper', 
+                src: 'https://picsum.photos/id/14/800/800', 
+                description: 'Deep within the ancient woods, secrets are kept by the towering pines and mossy stones.',
+                year: '2019'
+            },
+            { 
+                id: '6', 
+                title: 'Desert Mirage', 
+                src: 'https://picsum.photos/id/15/800/800', 
+                description: 'Shifting sands and heat waves create illusions of water in the endless expanse of the arid dunes.',
+                year: '2025'
+            },
+            { 
+                id: '7', 
+                title: 'River Flow', 
+                src: 'https://picsum.photos/id/16/800/800', 
+                description: 'The relentless path of water carving through the landscape, a metaphor for the passage of time.',
+                year: '2022'
+            },
+            { 
+                id: '8', 
+                title: 'Autumn Leaves', 
+                src: 'https://picsum.photos/id/17/800/800', 
+                description: 'A crisp celebration of change, as nature prepares for the slumber of winter with a fiery display.',
+                year: '2020'
+            },
+            { 
+                id: '9', 
+                title: 'Winter Frost', 
+                src: 'https://picsum.photos/id/18/800/800', 
+                description: 'The delicate geometry of ice crystals covering the world in a silent, white blanket.',
+                year: '2024'
+            },
+            { 
+                id: '10', 
+                title: 'Spring Bloom', 
+                src: 'https://picsum.photos/id/19/800/800', 
+                description: 'Rebirth and renewal, as life bursts forth from the thawing earth in a riot of color.',
+                year: '2023'
+            },
+        ];
+
+        /* --- LOGIC --- */
+        const { useRef, useEffect, useState, useCallback } = React;
+
+        const Gallery = () => {
+            const containerRef = useRef(null);
+            const itemsRef = useRef([]);
+            
+            // Physics State
+            const state = useRef({
+                scrollPos: 0,
+                targetScrollPos: 0,
+                isDragging: false,
+                lastX: 0,
+                velocity: 0,
+                cardWidth: 0,
+                totalWidth: 0,
+                rafId: 0,
+            });
+
+            // UI State
+            const [activeIndex, setActiveIndex] = useState(0);
+            const [isGrabbing, setIsGrabbing] = useState(false);
+            const [flippedIndex, setFlippedIndex] = useState(null);
+
+            // Calculate widths
+            const updateDimensions = useCallback(() => {
+                if (itemsRef.current.length > 0 && itemsRef.current[0]) {
+                    const firstCard = itemsRef.current[0];
+                    state.current.cardWidth = firstCard.offsetWidth + CONFIG.gap;
+                    state.current.totalWidth = state.current.cardWidth * GALLERY_ITEMS.length;
+                }
+            }, []);
+
+            // Main Animation Loop
+            const animate = useCallback(() => {
+                const s = state.current;
+
+                // Physics interactions
+                if (!s.isDragging) {
+                    s.targetScrollPos += s.velocity;
+                    s.velocity *= CONFIG.friction;
+
+                    // Snap to grid when moving slowly
+                    if (Math.abs(s.velocity) < 0.1) {
+                        if (s.cardWidth > 0) {
+                            const snapIndex = Math.round(s.targetScrollPos / s.cardWidth);
+                            const snapPos = snapIndex * s.cardWidth;
+                            s.targetScrollPos += (snapPos - s.targetScrollPos) * 0.1;
+                        }
+                    }
+                }
+
+                // Interpolate actual scroll position
+                s.scrollPos += (s.targetScrollPos - s.scrollPos) * 0.1;
+
+                let centerIndex = 0;
+                let minDist = Infinity;
+                const winWidth = window.innerWidth;
+
+                // Update cards directly via DOM for performance
+                itemsRef.current.forEach((el, i) => {
+                    if (!el) return;
+
+                    const baseOffset = i * s.cardWidth;
+                    // Infinite scroll wrapping math
+                    let relativePos = (baseOffset - s.scrollPos) % s.totalWidth;
+
+                    if (relativePos > s.totalWidth / 2) relativePos -= s.totalWidth;
+                    if (relativePos < -s.totalWidth / 2) relativePos += s.totalWidth;
+
+                    const distance = Math.abs(relativePos);
+                    const normalize = Math.max(0, 1 - distance / (winWidth * 0.6));
+
+                    // Scale & Opacity falloff
+                    const scale = 1 - (1 - normalize) * CONFIG.scaleSpread;
+                    const opacity = 1 - (1 - normalize) * CONFIG.opacitySpread;
+
+                    // Coverflow 3D Rotation
+                    const direction = relativePos === 0 ? 0 : relativePos > 0 ? -1 : 1;
+                    const rotateY = direction * Math.min(50, distance / 8);
+
+                    // Apply Transforms
+                    el.style.transform = `translate(-50%, -50%) translateX(${relativePos}px) rotateY(${rotateY}deg) scale(${scale})`;
+                    el.style.opacity = opacity;
+                    el.style.zIndex = Math.round(normalize * 100);
+
+                    if (distance < minDist) {
+                        minDist = distance;
+                        centerIndex = i;
+                    }
+                });
+
+                setActiveIndex(prev => {
+                    if (prev !== centerIndex) {
+                        setFlippedIndex(null); // Close details when scrolling to new item
+                        return centerIndex;
+                    }
+                    return prev;
+                });
+
+                s.rafId = requestAnimationFrame(animate);
+            }, []);
+
+            // Input Handlers
+            const handleStart = (clientX) => {
+                setFlippedIndex(null);
+                state.current.isDragging = true;
+                state.current.lastX = clientX;
+                state.current.velocity = 0;
+                setIsGrabbing(true);
+                cancelAnimationFrame(state.current.rafId);
+                state.current.rafId = requestAnimationFrame(animate);
+            };
+
+            const handleMove = (clientX) => {
+                if (!state.current.isDragging) return;
+                const delta = clientX - state.current.lastX;
+                state.current.targetScrollPos += delta * CONFIG.sensitivity;
+                state.current.velocity = delta * CONFIG.sensitivity;
+                state.current.lastX = clientX;
+            };
+
+            const handleEnd = () => {
+                state.current.isDragging = false;
+                setIsGrabbing(false);
+            };
+
+            const handleWheel = (e) => {
+                // if (Math.abs(e.deltaY) > 5) setFlippedIndex(null);
+                state.current.targetScrollPos -= e.deltaY * 0.6;
+            };
+
+            const handleCardClick = (index) => {
+                // If we click the center card, toggle details
+                if (index === activeIndex) {
+                    setFlippedIndex(flippedIndex === index ? null : index);
+                } else {
+                    // Otherwise, calculate shortest path to scroll to that card
+                    const s = state.current;
+                    const currentSnap = Math.round(s.targetScrollPos / s.cardWidth);
+                    const diff = index - (currentSnap % GALLERY_ITEMS.length);
+                    
+                    let adjustedDiff = diff;
+                    const len = GALLERY_ITEMS.length;
+                    if (adjustedDiff > len / 2) adjustedDiff -= len;
+                    if (adjustedDiff < -len / 2) adjustedDiff += len;
+
+                    s.targetScrollPos = (currentSnap + adjustedDiff) * s.cardWidth;
+                    setFlippedIndex(null);
+                }
+            };
+
+            // Setup
+            useEffect(() => {
+                updateDimensions();
+                state.current.rafId = requestAnimationFrame(animate);
+
+                const handleResize = () => updateDimensions();
+                window.addEventListener('resize', handleResize);
+
+                const onMouseMove = (e) => handleMove(e.clientX);
+                const onMouseUp = () => handleEnd();
+                const onTouchMove = (e) => handleMove(e.touches[0].clientX);
+                const onTouchEnd = () => handleEnd();
+
+                const container = containerRef.current;
+                if (container) {
+                    container.addEventListener('wheel', handleWheel, { passive: false });
+                }
+
+                return () => {
+                    cancelAnimationFrame(state.current.rafId);
+                    window.removeEventListener('resize', handleResize);
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    window.removeEventListener('touchmove', onTouchMove);
+                    window.removeEventListener('touchend', onTouchEnd);
+                    if (container) {
+                        container.removeEventListener('wheel', handleWheel);
+                    }
+                };
+            }, [animate, updateDimensions]);
+
+            return (
+                <React.Fragment>
+                    <div 
+                        ref={containerRef}
+                        className={`fixed inset-0 flex items-center justify-center perspective-container overflow-hidden cursor-grab active:cursor-grabbing ${isGrabbing ? 'cursor-grabbing' : ''}`}
+                        onMouseDown={(e) => handleStart(e.clientX)}
+                        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+                    >
+                        <ul className="relative w-full h-[60vh] list-none preserve-3d">
+                            {GALLERY_ITEMS.map((item, i) => (
+                                <li
+                                    key={item.id}
+                                    ref={(el) => {itemsRef.current[i] = el}}
+                                    // 1:1 Aspect Ratio (40vh x 40vh)
+                                    className={`absolute top-1/2 left-1/2 w-[40vh] h-[40vh] will-change-transform preserve-3d ${i === activeIndex ? 'cursor-pointer' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCardClick(i);
+                                    }}
+                                >
+                                    {/* Flip Container */}
+                                    <div className={`relative w-full h-full duration-700 preserve-3d transition-transform ease-out reflect-below ${flippedIndex === i ? 'rotate-y-180' : ''}`}>
+                                        
+                                        {/* Front Face: Image */}
+                                        <div className="absolute inset-0 backface-hidden">
+                                            <img
+                                                src={item.src}
+                                                alt={item.title}
+                                                className="block w-full h-full object-cover rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] select-none pointer-events-none"
+                                                draggable={false}
+                                            />
+                                        </div>
+
+                                        {/* Back Face: Details */}
+                                        <div className="absolute inset-0 backface-hidden rotate-y-180 bg-[#111] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/10 p-6 flex flex-col items-center justify-center text-center select-none">
+                                            <div className="text-xs text-blue-400 font-bold tracking-widest uppercase mb-2">
+                                                {item.year}
+                                            </div>
+                                            <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
+                                            <p className="text-sm text-gray-400 leading-relaxed">
+                                                {item.description}
+                                            </p>
+                                            <div className="mt-6 w-8 h-1 bg-white/20 rounded-full opacity-50" />
+                                        </div>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* HUD Overlay */}
+                    <div className={`fixed bottom-20 left-1/2 -translate-x-1/2 text-center z-50 pointer-events-none transition-opacity duration-300 ${flippedIndex !== null ? 'opacity-0' : 'opacity-100'}`}>
+                        <div className="text-2xl mb-1.5 font-bold tracking-wide drop-shadow-md">
+                           {GALLERY_ITEMS[activeIndex]?.title || 'Loading...'}
+                        </div>
+                        <div className="text-xs opacity-50 tracking-widest uppercase">
+                            {activeIndex + 1} of {GALLERY_ITEMS.length}
+                        </div>
+                    </div>
+                </React.Fragment>
+            );
+        };
+
+        const App = () => {
+            return (
+                <div className="relative w-full h-screen bg-[#050505] text-white overflow-hidden font-sans">
+                    <header className="fixed top-5 left-8 z-50 font-bold tracking-widest text-lg pointer-events-none opacity-90">
+                        d0nt.blinkk
+                    </header>
+                    <Gallery />
+                    <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#050505_120%)] z-10" />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
