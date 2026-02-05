@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>d0nt.blinkk</title>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height:100%;
+  overflow:hidden;
+  font-family:"Helvetica Neue", Arial, sans-serif;
+  background:#050505;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== GALLERY ===== */
+.gallery {
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:grab;
+  perspective:1400px;
+}
+
+.gallery.grabbing { cursor:grabbing; }
+
+ul.cards {
+  list-style:none;
+  position:relative;
+  width:100%;
+  height:60vh;
+}
+
+ul.cards li {
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:35vh;
+  height:50vh;
+  transform-style:preserve-3d;
+  will-change:transform, opacity;
+}
+
+/* ===== IMAGES ===== */
+ul.cards li img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  pointer-events:none;
+  display:block;
+
+  /* Reflection */
+  -webkit-box-reflect: below 8px
+    linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.3),
+      rgba(0,0,0,0.7)
+    );
+}
+
+/* ===== UI ===== */
+.header {
+  position:fixed;
+  top:20px;
+  left:30px;
+  z-index:100;
+  font-weight:700;
+  letter-spacing:1px;
+}
+
+.info-display {
+  position:fixed;
+  bottom:80px;
+  left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+  z-index:100;
+}
+
+.cover-title { font-size:22px; margin-bottom:6px; }
+.cover-index { font-size:12px; opacity:0.5; }
+</style>
+</head>
+
+<body>
+
+<div class="gallery" id="gallery">
+  <ul class="cards" id="cards-container"></ul>
+</div>
+
+<div class="header">d0nt.blinkk</div>
+
+<div class="info-display">
+  <div class="cover-title" id="coverTitle">Loading...</div>
+  <div class="cover-index" id="coverIndex"></div>
+</div>
+
+<script>
+const CONFIG = {
+  sensitivity: 1.5,
+  friction: 0.95,
+  gap: 60,
+  scaleSpread: 0.5,
+  opacitySpread: 0.5
+};
+
+let images = [];
+let items = [];
+let scrollPos = 0;
+let targetScrollPos = 0;
+let isDragging = false;
+let lastX = 0;
+let velocity = 0;
+let rafId;
+let cardWidth = 0;
+let totalWidth = 0;
+
+const container = document.getElementById('cards-container');
+const gallery = document.getElementById('gallery');
+const titleEl = document.getElementById('coverTitle');
+const indexEl = document.getElementById('coverIndex');
+
+/* ===== LOAD IMAGES ===== */
+fetch('images.json')
+  .then(r => r.json())
+  .then(data => {
+    images = data;
+    init();
+    animate();
+  })
+  .catch(() => {
+    images = ['placeholder.jpg','placeholder.jpg','placeholder.jpg'];
+    init();
+    animate();
+  });
+
+function init() {
+  container.innerHTML = '';
+  items = [];
+
+  images.forEach((src, i) => {
+    const li = document.createElement('li');
+    const img = document.createElement('img');
+    img.src = `images/${src}`;
+    img.draggable = false;
+    li.appendChild(img);
+    container.appendChild(li);
+
+    items.push({
+      el: li,
+      index: i,
+      title: src.replace(/\.[^/.]+$/, '')
+    });
+  });
+
+  updateDimensions();
+  window.addEventListener('resize', updateDimensions);
+}
+
+function updateDimensions() {
+  if(items.length > 0){
+    cardWidth = items[0].el.offsetWidth + CONFIG.gap;
+    totalWidth = cardWidth * items.length;
+  }
+}
+
+/* ===== INTERACTION ===== */
+function start(x){
+  isDragging = true;
+  lastX = x;
+  velocity = 0;
+  gallery.classList.add('grabbing');
+  cancelAnimationFrame(rafId);
+  animate();
+}
+
+function move(x){
+  if(!isDragging) return;
+  const delta = x - lastX;
+  targetScrollPos += delta * CONFIG.sensitivity;
+  velocity = delta * CONFIG.sensitivity;
+  lastX = x;
+}
+
+function end(){
+  isDragging = false;
+  gallery.classList.remove('grabbing');
+}
+
+gallery.addEventListener('mousedown', e=>start(e.clientX));
+window.addEventListener('mousemove', e=>move(e.clientX));
+window.addEventListener('mouseup', end);
+
+gallery.addEventListener('touchstart', e=>start(e.touches[0].clientX));
+window.addEventListener('touchmove', e=>move(e.touches[0].clientX));
+window.addEventListener('touchend', end);
+
+gallery.addEventListener('wheel', e=>{
+  e.preventDefault();
+  targetScrollPos -= e.deltaY * 0.6;
+},{passive:false});
+
+/* ===== ANIMATION ===== */
+function animate(){
+
+  if(!isDragging){
+    targetScrollPos += velocity;
+    velocity *= CONFIG.friction;
+
+    if(Math.abs(velocity) < 0.1){
+      const snapIndex = Math.round(targetScrollPos / cardWidth);
+      const snapPos = snapIndex * cardWidth;
+      targetScrollPos += (snapPos - targetScrollPos) * 0.1;
+    }
+  }
+
+  scrollPos += (targetScrollPos - scrollPos) * 0.1;
+
+  let centerIndex = 0;
+  let minDist = Infinity;
+
+  items.forEach((item, i)=>{
+
+    const baseOffset = i * cardWidth;
+    let relativePos = (baseOffset - scrollPos) % totalWidth;
+
+    if(relativePos > totalWidth/2) relativePos -= totalWidth;
+    if(relativePos < -totalWidth/2) relativePos += totalWidth;
+
+    const distance = Math.abs(relativePos);
+    const normalize = Math.max(0, 1 - distance / (window.innerWidth * 0.6));
+
+    const scale = 1 - (1 - normalize) * CONFIG.scaleSpread;
+    const opacity = 1 - (1 - normalize) * CONFIG.opacitySpread;
+
+    const direction = relativePos === 0 ? 0 : relativePos > 0 ? -1 : 1;
+    const rotateY = direction * Math.min(50, distance / 8);
+
+    item.el.style.transform = `
+      translate(-50%, -50%)
+      translateX(${relativePos}px)
+      rotateY(${rotateY}deg)
+      scale(${scale})
+    `;
+
+    item.el.style.opacity = opacity;
+    item.el.style.zIndex = Math.round(normalize * 100);
+
+    if(distance < minDist){
+      minDist = distance;
+      centerIndex = i;
+    }
+  });
+
+  if(items.length){
+    const active = items[centerIndex];
+    titleEl.textContent = active.title;
+    indexEl.textContent = `${active.index+1} of ${items.length}`;
+  }
+
+  rafId = requestAnimationFrame(animate);
+}
+</script>
+
+</body>
+</html>
