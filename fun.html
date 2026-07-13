@@ -2,397 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>d0nt.blinkk</title>
-  <link rel="icon" href="favicon.png" type="image/png">
-  <style>
-    /* --- RESET & BASICS --- */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body {
-      height: 100%;
-      overflow: hidden;
-      font-family: "Helvetica Neue", Arial, sans-serif;
-      background: #050505;
-      color: #fff;
-      -webkit-font-smoothing: antialiased;
-      /* Prevent text selection globally during drag */
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-    }
-
-    /* --- GALLERY WRAPPER: centers card strip + label together --- */
-    .gallery-wrapper {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none; /* children opt back in */
-    }
-
-    /* --- GALLERY CONTAINER --- */
-    .gallery {
-      width: 100%;
-      height: 50vh;
-      position: relative;
-      overflow: hidden;
-      cursor: grab;
-      pointer-events: all;
-      perspective: 1000px;
-    }
-    .gallery.grabbing {
-      cursor: grabbing;
-    }
-
-    /* --- TITLE BLOCK — sits directly below the gallery strip --- */
-    .info-display {
-      width: 100%;
-      text-align: center;
-      padding-top: 22px;
-      pointer-events: none;
-    }
-    .cover-title {
-      font-size: 22px;
-      font-weight: 600;
-      margin-bottom: 6px;
-      opacity: 0.95;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-    }
-    .cover-index {
-      font-size: 12px;
-      opacity: 0.5;
-      font-weight: 300;
-    }
-
-    /* --- THE CARDS LIST --- */
-    ul.cards {
-      list-style: none;
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0; left: 0;
-    }
-
-    /* --- INDIVIDUAL CARD ITEMS --- */
-    ul.cards li {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      width: 35vh;
-      height: 50vh;
-      will-change: transform, opacity;
-      transform-style: preserve-3d;
-      -webkit-user-drag: none;
-    }
-
-    /* --- IMAGES --- */
-    ul.cards li img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 15px 50px rgba(0,0,0,0.5);
-      pointer-events: none;
-      display: block;
-      background: #1a1a1a;
-      /* Critical: kill native image drag entirely */
-      draggable: false;
-      -webkit-user-drag: none;
-      -khtml-user-drag: none;
-      -moz-user-drag: none;
-      -o-user-drag: none;
-      user-drag: none;
-    }
-
-    /* --- UI OVERLAYS (Header, Footer) --- */
-    .header {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 20px 30px;
-      z-index: 100; pointer-events: none;
-    }
-    .logo {
-      font-size: 24px; font-weight: 700; letter-spacing: 1px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .controls { pointer-events: all; }
-    .btn {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      color: #fff; padding: 8px 16px; border-radius: 20px;
-      cursor: pointer; font-size: 12px; transition: all 0.2s;
-      backdrop-filter: blur(10px);
-    }
-    .btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-1px); }
-    .footer {
-      position: fixed; bottom: 20px; left: 50%;
-      transform: translateX(-50%); text-align: center;
-      font-size: 11px; opacity: 0.4; z-index: 100; pointer-events: none;
-    }
-    .footer a { color: inherit; text-decoration: none; pointer-events: all; }
-
-    /* --- LIGHTBOX --- */
-    .lightbox {
-      display: none; position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.95); backdrop-filter: blur(12px);
-      align-items: center; justify-content: center;
-    }
-    .lightbox.visible { display: flex; }
-    .lightbox-content { max-width: 90%; max-height: 90%; position: relative; }
-    .lightbox-content img {
-      max-width: 100%; max-height: 90vh;
-      border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-      /* Allow normal viewing in lightbox */
-      pointer-events: none;
-    }
-    .lightbox-close {
-      position: absolute; top: -50px; right: 0;
-      background: transparent; border: none; color: #fff;
-      font-size: 30px; cursor: pointer; opacity: 0.7;
-    }
-
-    /* --- ABOUT OVERLAY --- */
-    .about-overlay {
-      position: fixed; inset: 0; display: none;
-      align-items: center; justify-content: center;
-      background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
-      z-index: 1500;
-    }
-    .about-overlay.visible { display: flex; }
-    .about-card {
-      max-width: 400px; background: #111; color: #fff;
-      padding: 30px; border-radius: 12px; border: 1px solid #333;
-    }
-    .about-card h3 { margin-bottom: 15px; }
-    .about-card p { font-size: 14px; line-height: 1.5; color: #ccc; }
-  </style>
-</head>
-<body>
-
-  <!-- Wrapper keeps gallery strip and title label together as one centered unit -->
-  <div class="gallery-wrapper">
-    <div class="gallery" id="gallery">
-      <ul class="cards" id="cards-container"></ul>
-    </div>
-    <div class="info-display">
-      <div class="cover-title" id="coverTitle">Loading...</div>
-      <div class="cover-index" id="coverIndex"></div>
-    </div>
-  </div>
-
-  <div class="header">
-    <div class="logo">d0nt.blinkk</div>
-    <div class="controls"><button class="btn" id="aboutBtn">About</button></div>
-  </div>
-
-  <div class="footer">
-    © 2026 <a href="https://instagram.com/d0nt.blinkk" target="_blank">d0nt.blinkk</a>
-  </div>
-
-  <div class="lightbox" id="lightbox">
-    <div class="lightbox-content">
-      <button class="lightbox-close" id="lightboxClose">×</button>
-      <img id="lightboxImg" src="" alt="">
-    </div>
-  </div>
-
-  <div class="about-overlay" id="aboutOverlay">
-    <div class="about-card">
-      <h3>About</h3>
-      <p>d0nt.blinkk is the creative universe of Tate.</p>
-      <div style="margin-top:20px;text-align:right"><button class="btn" id="closeAbout">Close</button></div>
-    </div>
-  </div>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tate | Corporate & Dev Comms</title>
+  
+  <!-- Typewriter Font: Courier Prime -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // --- CONFIGURATION ---
-    const CONFIG = {
-      sensitivity: 1.5,
-      friction: 0.95,
-      gap: 50,
-      scaleSpread: 0.4,
-      opacitySpread: 0.5
-    };
-
-    // --- STATE ---
-    let images = [];
-    let items = [];
-    let scrollPos = 0;
-    let targetScrollPos = 0;
-    let isDragging = false;
-    let startX = 0;
-    let lastX = 0;
-    let velocity = 0;
-    let rafId;
-    let cardWidth = 0;
-    let totalWidth = 0;
-
-    // --- DOM ELEMENTS ---
-    const container = document.getElementById('cards-container');
-    const gallery   = document.getElementById('gallery');
-    const titleEl   = document.getElementById('coverTitle');
-    const indexEl   = document.getElementById('coverIndex');
-    const lightbox  = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightboxImg');
-
-    // --- INIT ---
-    fetch('images.json')
-      .then(r => r.json())
-      .then(data => { images = data; initGallery(); animate(); })
-      .catch(() => {
-        images = ['placeholder.jpg', 'placeholder.jpg', 'placeholder.jpg', 'placeholder.jpg'];
-        initGallery();
-        animate();
-      });
-
-    function initGallery() {
-      container.innerHTML = '';
-      items = [];
-      images.forEach((src, i) => {
-        const li  = document.createElement('li');
-        const img = document.createElement('img');
-        img.src       = `images/${src}`;
-        img.draggable = false;           // HTML attribute
-        img.alt       = "Album cover";
-        img.setAttribute('draggable', 'false');
-        li.appendChild(img);
-        container.appendChild(li);
-        items.push({ el: li, index: i, title: src.replace(/\.[^/.]+$/, '') });
-        li.addEventListener('click', () => handleClick(i));
-      });
-      updateDimensions();
-      window.addEventListener('resize', updateDimensions);
-    }
-
-    function updateDimensions() {
-      if (items.length > 0) {
-        cardWidth  = items[0].el.offsetWidth + CONFIG.gap;
-        totalWidth = cardWidth * items.length;
-      }
-    }
-
-    // --- INTERACTION: prevent native selection & drag on the gallery ---
-    gallery.addEventListener('dragstart', e => e.preventDefault());
-    gallery.addEventListener('selectstart', e => e.preventDefault());
-
-    const onStart = (x) => {
-      isDragging = true;
-      startX = x;
-      lastX  = x;
-      velocity = 0;
-      gallery.classList.add('grabbing');
-      cancelAnimationFrame(rafId);
-      animate();
-    };
-    const onMove = (x) => {
-      if (!isDragging) return;
-      const delta = x - lastX;
-      targetScrollPos += delta * CONFIG.sensitivity;
-      velocity = delta * CONFIG.sensitivity;
-      lastX = x;
-    };
-    const onEnd = () => {
-      isDragging = false;
-      gallery.classList.remove('grabbing');
-    };
-
-    gallery.addEventListener('mousedown',  e => { e.preventDefault(); onStart(e.clientX); });
-    window.addEventListener('mousemove',   e => onMove(e.clientX));
-    window.addEventListener('mouseup',     onEnd);
-    gallery.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
-    window.addEventListener('touchmove',   e => { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
-    window.addEventListener('touchend',    onEnd);
-    gallery.addEventListener('wheel', e => {
-      e.preventDefault();
-      targetScrollPos -= e.deltaY * 0.5;
-    }, { passive: false });
-
-    // --- ANIMATION LOOP ---
-    function animate() {
-      if (!isDragging) {
-        targetScrollPos += velocity;
-        velocity *= CONFIG.friction;
-        if (Math.abs(velocity) < 0.1 && Math.abs(velocity) > 0) {
-          const nearestIndex = Math.round(targetScrollPos / cardWidth);
-          const snapPos = nearestIndex * cardWidth;
-          targetScrollPos += (snapPos - targetScrollPos) * 0.1;
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            mono: ['"Courier Prime"', 'monospace'],
+          },
+          colors: {
+            background: '#F4F4F0', // Slightly warmer paper off-white
+            primary: '#111111',    // Ink black
+            muted: '#666666',      // Faded ink
+          }
         }
       }
-
-      scrollPos += (targetScrollPos - scrollPos) * 0.1;
-
-      let centerItemIndex = 0;
-      let minDist = Infinity;
-
-      items.forEach((item, i) => {
-        const itemOffset = i * cardWidth;
-        let relativePos  = (itemOffset + scrollPos) % totalWidth;
-        while (relativePos >  totalWidth / 2) relativePos -= totalWidth;
-        while (relativePos < -totalWidth / 2) relativePos += totalWidth;
-
-        const distance  = Math.abs(relativePos);
-        const normalize = Math.max(0, 1 - distance / (window.innerWidth * 0.6));
-        const scale     = 1 - (1 - normalize) * CONFIG.scaleSpread;
-        const opacity   = 1 - (1 - normalize) * CONFIG.opacitySpread;
-        const zIndex    = Math.round(normalize * 100);
-
-        const halfCard = items[0].el.offsetWidth / 2;
-        item.el.style.transform = `translate3d(calc(${relativePos}px - ${halfCard}px), 0, 0) scale(${scale})`;
-        item.el.style.opacity   = opacity;
-        item.el.style.zIndex    = zIndex;
-
-        if (distance < minDist) { minDist = distance; centerItemIndex = i; }
-      });
-
-      if (items.length > 0) {
-        const activeItem = items[centerItemIndex];
-        titleEl.textContent = activeItem.title;
-        indexEl.textContent = `${activeItem.index + 1} of ${items.length}`;
-      }
-
-      rafId = requestAnimationFrame(animate);
     }
-
-    // --- CLICK HANDLING ---
-    function handleClick(index) {
-      if (Math.abs(velocity) > 1) return;
-      const currentCycle = Math.round(targetScrollPos / totalWidth);
-      const idealPos = -(index * cardWidth) + (currentCycle * totalWidth);
-
-      if (titleEl.textContent === items[index].title) {
-        openLightbox(index);
-      } else {
-        const style       = window.getComputedStyle(items[index].el);
-        const matrix      = new DOMMatrix(style.transform);
-        const currentVisualX = matrix.m41;
-        targetScrollPos  -= currentVisualX;
-      }
-    }
-
-    // --- LIGHTBOX ---
-    function openLightbox(index) {
-      lightboxImg.src = `images/${images[index]}`;
-      lightbox.classList.add('visible');
-    }
-    document.getElementById('lightboxClose').addEventListener('click', () => lightbox.classList.remove('visible'));
-    lightbox.addEventListener('click', e => { if (e.target === lightbox) lightbox.classList.remove('visible'); });
-
-    // --- ABOUT ---
-    document.getElementById('aboutBtn').addEventListener('click', () => {
-      document.getElementById('aboutOverlay').classList.add('visible');
-    });
-    document.getElementById('closeAbout').addEventListener('click', () => {
-      document.getElementById('aboutOverlay').classList.remove('visible');
-    });
-    document.getElementById('aboutOverlay').addEventListener('click', e => {
-      if (e.target === document.getElementById('aboutOverlay')) e.target.classList.remove('visible');
-    });
   </script>
+
+  <style>
+    /* Global Styles to ensure absolute no-scrolling */
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden; /* Forbids scrolling */
+      background-color: theme('colors.background');
+      color: theme('colors.primary');
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    ::selection {
+      background: theme('colors.primary');
+      color: theme('colors.background');
+    }
+
+    /* Subtle hover transitions for the image links */
+    .project-img {
+      transition: all 0.4s ease;
+      filter: grayscale(100%) contrast(1.1);
+    }
+    .project-card:hover .project-img {
+      filter: grayscale(0%) contrast(1);
+      transform: scale(1.05);
+    }
+    
+    /* Custom scrollbar just as a fail-safe for incredibly tiny devices */
+    .safe-scroll::-webkit-scrollbar { width: 4px; }
+    .safe-scroll::-webkit-scrollbar-thumb { background: theme('colors.primary'); }
+  </style>
+</head>
+<body class="font-mono p-3 md:p-6 box-border flex flex-col uppercase tracking-tight">
+
+  <!-- OUTER FRAME (Creates the blueprint/dossier aesthetic) -->
+  <div class="flex-1 flex flex-col border-2 border-primary w-full h-full min-h-0 overflow-hidden">
+    
+    <!-- TOP HEADER (Row 1) -->
+    <header class="shrink-0 flex items-center justify-between border-b-2 border-primary px-4 py-3 bg-primary text-background">
+      <h1 class="font-bold text-lg md:text-2xl leading-none">TATE.</h1>
+      <span class="text-[10px] md:text-xs font-bold text-right leading-tight max-w-[200px] md:max-w-none">
+        Corporate & Developmental<br class="md:hidden"> Communications
+      </span>
+    </header>
+
+    <!-- MIDDLE CONTENT (Row 2: Split into Left Text and Right Projects) -->
+    <main class="flex-1 flex flex-col lg:flex-row min-h-0">
+      
+      <!-- LEFT: Text Section -->
+      <section class="w-full lg:w-1/2 flex flex-col border-b-2 lg:border-b-0 lg:border-r-2 border-primary min-h-0 relative">
+        
+        <!-- Hero Statement -->
+        <div class="border-b-2 border-primary p-4 md:p-8 shrink-0">
+          <h2 class="text-2xl md:text-4xl lg:text-5xl font-bold leading-[1.1] normal-case">
+            Shaping narratives for <br>
+            <span class="italic text-muted line-through decoration-primary decoration-2">meaningful</span> impact.
+          </h2>
+        </div>
+
+        <!-- About & Competencies -->
+        <div class="flex-1 p-4 md:p-8 overflow-y-auto safe-scroll flex flex-col justify-center">
+          <div class="text-xs md:text-sm normal-case leading-relaxed space-y-4 max-w-lg">
+            <p>
+              With a background spanning both corporate boardrooms and grassroots initiatives, I bring a unique, dual-lens perspective to organizational communications. My approach is rooted in clarity, empathy, and strategic foresight.
+            </p>
+            <p>
+              Whether guiding a multinational corporation through structural changes or helping an NGO amplify its impact, I craft narratives that resonate with stakeholders and drive measurable action.
+            </p>
+            
+            <div class="pt-4 border-t border-primary/30 mt-4">
+              <strong class="uppercase text-[10px] md:text-xs tracking-widest mb-2 block">> Core Competencies</strong>
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <li>— Strategic Corp. Narrative</li>
+                <li>— Developmental PR</li>
+                <li>— Crisis Management</li>
+                <li>— Stakeholder Engagement</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Projects Grid (Embedded Links in Images) -->
+      <!-- EDITING GUIDE: Update href="..." and img src="..." below -->
+      <section class="w-full lg:w-1/2 grid grid-cols-2 grid-rows-2 min-h-0 bg-primary">
+        
+        <!-- Project 1 -->
+        <a href="https://example.com/project1" target="_blank" rel="noopener" class="project-card group relative block border-b-2 border-r-2 border-primary overflow-hidden bg-background">
+          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop" alt="Synergy" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
+          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <span class="block text-xs font-bold leading-none mb-1">Global Synergy</span>
+            <span class="block text-[10px] text-muted leading-none">Corp. Communications</span>
+          </div>
+          <!-- Persistent Number Indicator -->
+          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">01</div>
+        </a>
+
+        <!-- Project 2 -->
+        <a href="https://example.com/project2" target="_blank" rel="noopener" class="project-card group relative block border-b-2 border-primary overflow-hidden bg-background">
+          <img src="https://images.unsplash.com/photo-1531498860502-7c67cf02f657?q=80&w=1000&auto=format&fit=crop" alt="Water Access" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
+          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <span class="block text-xs font-bold leading-none mb-1">Water Access</span>
+            <span class="block text-[10px] text-muted leading-none">Campaign & PR</span>
+          </div>
+          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">02</div>
+        </a>
+
+        <!-- Project 3 -->
+        <a href="https://example.com/project3" target="_blank" rel="noopener" class="project-card group relative block border-r-2 border-primary overflow-hidden bg-background">
+          <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=1000&auto=format&fit=crop" alt="Crisis Protocol" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
+          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <span class="block text-xs font-bold leading-none mb-1">Crisis Protocol</span>
+            <span class="block text-[10px] text-muted leading-none">Internal Strategy</span>
+          </div>
+          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">03</div>
+        </a>
+
+        <!-- Project 4 -->
+        <a href="https://example.com/project4" target="_blank" rel="noopener" class="project-card group relative block overflow-hidden bg-background">
+          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop" alt="Annual Report" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
+          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            <span class="block text-xs font-bold leading-none mb-1">Annual Report</span>
+            <span class="block text-[10px] text-muted leading-none">Investor Relations</span>
+          </div>
+          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">04</div>
+        </a>
+
+      </section>
+    </main>
+
+    <!-- FOOTER / CONTACT (Row 3) -->
+    <footer class="shrink-0 flex flex-col sm:flex-row justify-between items-center border-t-2 border-primary px-4 py-3 bg-background gap-2 text-xs font-bold">
+      <div class="flex gap-4 md:gap-8 flex-wrap justify-center sm:justify-start">
+        <a href="mailto:chorumz@gmail.com" class="hover:text-muted hover:line-through transition-colors">E: chorumz@gmail.com</a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">LN: LinkedIn</a>
+        <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">IG: Instagram</a>
+        <a href="#" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">DL: Resume</a>
+      </div>
+      
+      <div class="text-[10px] text-muted text-center sm:text-right uppercase tracking-widest shrink-0">
+        REF: 2026-TM
+      </div>
+    </footer>
+
+  </div>
+
 </body>
 </html>
