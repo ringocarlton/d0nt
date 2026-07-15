@@ -60,15 +60,15 @@
     .safe-scroll::-webkit-scrollbar-thumb { background: theme('colors.primary'); }
   </style>
 </head>
-<body class="font-mono p-3 md:p-6 box-border flex flex-col uppercase tracking-tight">
+<body class="font-mono p-2 md:p-6 box-border flex flex-col uppercase tracking-tight">
 
   <!-- OUTER FRAME (Creates the blueprint/dossier aesthetic) -->
   <div class="flex-1 flex flex-col border-2 border-primary w-full h-full min-h-0 overflow-hidden">
     
     <!-- TOP HEADER (Row 1) -->
-    <header class="shrink-0 flex items-center justify-between border-b-2 border-primary px-4 py-3 bg-primary text-background">
+    <header class="shrink-0 flex items-center justify-between border-b-2 border-primary px-3 py-2 md:px-4 md:py-3 bg-primary text-background">
       <h1 class="font-bold text-lg md:text-2xl leading-none">TATE.</h1>
-      <span class="text-[10px] md:text-xs font-bold text-right leading-tight max-w-[200px] md:max-w-none">
+      <span class="text-[9px] md:text-xs font-bold text-right leading-tight max-w-[180px] md:max-w-none">
         Corporate & Developmental<br class="md:hidden"> Communications
       </span>
     </header>
@@ -77,19 +77,19 @@
     <main class="flex-1 flex flex-col lg:flex-row min-h-0">
       
       <!-- LEFT: Text Section -->
-      <section class="w-full lg:w-1/2 flex flex-col border-b-2 lg:border-b-0 lg:border-r-2 border-primary min-h-0 relative">
+      <section class="w-full h-[55%] lg:h-full lg:w-1/2 flex flex-col border-b-2 lg:border-b-0 lg:border-r-2 border-primary min-h-0 relative">
         
         <!-- Hero Statement -->
-        <div class="border-b-2 border-primary p-4 md:p-8 shrink-0">
-          <h2 class="text-2xl md:text-4xl lg:text-5xl font-bold leading-[1.1] normal-case">
+        <div class="border-b-2 border-primary p-3 md:p-8 shrink-0">
+          <h2 class="text-xl md:text-4xl lg:text-5xl font-bold leading-[1.1] normal-case">
             Shaping narratives for <br>
             <span class="italic text-muted line-through decoration-primary decoration-2">meaningful</span> impact.
           </h2>
         </div>
 
         <!-- About & Competencies -->
-        <div class="flex-1 p-4 md:p-8 overflow-y-auto safe-scroll flex flex-col justify-center">
-          <div class="text-xs md:text-sm normal-case leading-relaxed space-y-4 max-w-lg">
+        <div class="flex-1 p-3 md:p-8 overflow-y-auto safe-scroll flex flex-col justify-center">
+          <div class="text-[11px] md:text-sm normal-case leading-relaxed space-y-3 md:space-y-4 max-w-lg">
             <p>
               With a background spanning both corporate boardrooms and grassroots initiatives, I bring a unique, dual-lens perspective to organizational communications. My approach is rooted in clarity, empathy, and strategic foresight.
             </p>
@@ -97,9 +97,9 @@
               Whether guiding a multinational corporation through structural changes or helping an NGO amplify its impact, I craft narratives that resonate with stakeholders and drive measurable action.
             </p>
             
-            <div class="pt-4 border-t border-primary/30 mt-4">
+            <div class="pt-3 md:pt-4 border-t border-primary/30 mt-3 md:mt-4">
               <strong class="uppercase text-[10px] md:text-xs tracking-widest mb-2 block">> Core Competencies</strong>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[10px] md:text-xs">
                 <li>— Strategic Corp. Narrative</li>
                 <li>— Developmental PR</li>
                 <li>— Crisis Management</li>
@@ -112,7 +112,7 @@
 
       <!-- RIGHT: Projects Grid (Embedded Links in Images) -->
       <!-- EDITING GUIDE: Update href="..." and img src="..." below -->
-      <section class="w-full lg:w-1/2 grid grid-cols-2 grid-rows-2 min-h-0 bg-primary">
+      <section class="w-full h-[45%] lg:h-full lg:w-1/2 grid grid-cols-2 grid-rows-2 min-h-0 bg-primary">
         
         <!-- Project 1 -->
         <a href="https://example.com/project1" target="_blank" rel="noopener" class="project-card group relative block border-b-2 border-r-2 border-primary overflow-hidden bg-background">
@@ -159,15 +159,15 @@
     </main>
 
     <!-- FOOTER / CONTACT (Row 3) -->
-    <footer class="shrink-0 flex flex-col sm:flex-row justify-between items-center border-t-2 border-primary px-4 py-3 bg-background gap-2 text-xs font-bold">
-      <div class="flex gap-4 md:gap-8 flex-wrap justify-center sm:justify-start">
+    <footer class="shrink-0 flex flex-col sm:flex-row justify-between items-center border-t-2 border-primary px-3 py-2 md:px-4 md:py-3 bg-background gap-2 text-[10px] md:text-xs font-bold">
+      <div class="flex gap-3 md:gap-8 flex-wrap justify-center sm:justify-start">
         <a href="mailto:chorumz@gmail.com" class="hover:text-muted hover:line-through transition-colors">E: chorumz@gmail.com</a>
         <a href="https://linkedin.com" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">LN: LinkedIn</a>
         <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">IG: Instagram</a>
         <a href="#" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">DL: Resume</a>
       </div>
       
-      <div class="text-[10px] text-muted text-center sm:text-right uppercase tracking-widest shrink-0">
+      <div class="text-[9px] md:text-[10px] text-muted text-center sm:text-right uppercase tracking-widest shrink-0">
         REF: 2026-TM
       </div>
     </footer>
