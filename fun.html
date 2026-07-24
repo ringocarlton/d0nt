@@ -20,9 +20,9 @@
             mono: ['"Courier Prime"', 'monospace'],
           },
           colors: {
-            background: '#F4F4F0', // Slightly warmer paper off-white
-            primary: '#111111',    // Ink black
-            muted: '#666666',      // Faded ink
+            background: '#FFFFFF', // Pure white
+            primary: '#000000',    // Pure black
+            muted: '#737373',      // Mid-gray for contrast
           }
         }
       }
@@ -30,11 +30,11 @@
   </script>
 
   <style>
-    /* Global Styles to ensure absolute no-scrolling */
+    /* Global Styles for rigid, application-like layout */
     html, body {
       height: 100%;
       width: 100%;
-      overflow: hidden; /* Forbids scrolling */
+      overflow: hidden; /* Forbids global scrolling, handled internally */
       background-color: theme('colors.background');
       color: theme('colors.primary');
       -webkit-font-smoothing: antialiased;
@@ -45,130 +45,103 @@
       color: theme('colors.background');
     }
 
-    /* Subtle hover transitions for the image links */
-    .project-img {
-      transition: all 0.4s ease;
-      filter: grayscale(100%) contrast(1.1);
-    }
-    .project-card:hover .project-img {
-      filter: grayscale(0%) contrast(1);
-      transform: scale(1.05);
+    /* Monochrome image treatments */
+    .mono-img {
+      filter: grayscale(100%) contrast(1.2);
     }
     
-    /* Custom scrollbar just as a fail-safe for incredibly tiny devices */
-    .safe-scroll::-webkit-scrollbar { width: 4px; }
+    /* Project card hover effects */
+    .project-img {
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), filter 0.5s ease;
+      filter: grayscale(100%) contrast(1.2) brightness(0.8);
+    }
+    
+    .project-card:hover .project-img {
+      transform: scale(1.08);
+      filter: grayscale(100%) contrast(1.3) brightness(1);
+    }
+    
+    /* Custom sharp scrollbar */
+    .safe-scroll::-webkit-scrollbar { width: 6px; }
+    .safe-scroll::-webkit-scrollbar-track { background: theme('colors.background'); border-left: 1px solid theme('colors.primary'); }
     .safe-scroll::-webkit-scrollbar-thumb { background: theme('colors.primary'); }
   </style>
 </head>
 <body class="font-mono p-2 md:p-6 box-border flex flex-col uppercase tracking-tight">
 
-  <!-- OUTER FRAME (Creates the blueprint/dossier aesthetic) -->
-  <div class="flex-1 flex flex-col border-2 border-primary w-full h-full min-h-0 overflow-hidden">
+  <!-- OUTER FRAME -->
+  <div class="flex-1 flex flex-col w-full h-full min-h-0 overflow-hidden relative">
     
-    <!-- TOP HEADER (Row 1) -->
-    <header class="shrink-0 flex items-center justify-between border-b-2 border-primary px-3 py-2 md:px-4 md:py-3 bg-primary text-background">
-      <h1 class="font-bold text-lg md:text-2xl leading-none">TATE.</h1>
-      <span class="text-[9px] md:text-xs font-bold text-right leading-tight max-w-[180px] md:max-w-none">
+    <!-- TOP HEADER -->
+    <header class="shrink-0 flex items-center justify-between px-3 py-2 md:px-4 md:py-3 z-10">
+      <div class="flex items-center gap-3">
+        <h1 class="font-bold text-lg md:text-2xl leading-none tracking-widest">TATE.</h1>
+      </div>
+      <span class="text-[9px] md:text-xs font-bold text-right leading-tight max-w-[180px] md:max-w-none uppercase">
         Corporate & Developmental<br class="md:hidden"> Communications
       </span>
     </header>
 
-    <!-- MIDDLE CONTENT (Row 2: Split into Left Text and Right Projects) -->
-    <main class="flex-1 flex flex-col lg:flex-row min-h-0">
+    <!-- MIDDLE CONTENT -->
+    <main class="flex-1 flex flex-col overflow-y-auto safe-scroll bg-background items-center">
       
-      <!-- LEFT: Text Section -->
-      <section class="w-full h-[55%] lg:h-full lg:w-1/2 flex flex-col border-b-2 lg:border-b-0 lg:border-r-2 border-primary min-h-0 relative">
+      <!-- Central Profile Section -->
+      <section class="w-full max-w-5xl flex flex-col md:flex-row p-4 md:p-8 lg:p-12 gap-8 lg:gap-16 my-auto">
         
-        <!-- Hero Statement -->
-        <div class="border-b-2 border-primary p-3 md:p-8 shrink-0">
-          <h2 class="text-xl md:text-4xl lg:text-5xl font-bold leading-[1.1] normal-case">
+        <!-- Photograph -->
+        <div class="w-full md:w-[45%] h-64 md:h-[500px] overflow-hidden bg-black relative shrink-0">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop" alt="Tate Portrait" class="w-full h-full object-cover object-top mono-img opacity-90" />
+          <div class="absolute top-2 left-2 bg-background text-primary px-1.5 py-0.5 text-[9px] font-bold">ID: 884-A</div>
+        </div>
+        
+        <!-- Hero Text & Bio -->
+        <div class="w-full md:w-[55%] flex flex-col justify-center">
+          <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold leading-[1.1] normal-case mb-6 md:mb-8">
             Shaping narratives for <br>
             <span class="italic text-muted line-through decoration-primary decoration-2">meaningful</span> impact.
           </h2>
-        </div>
-
-        <!-- About & Competencies -->
-        <div class="flex-1 p-3 md:p-8 overflow-y-auto safe-scroll flex flex-col justify-center">
-          <div class="text-[11px] md:text-sm normal-case leading-relaxed space-y-3 md:space-y-4 max-w-lg">
+          
+          <div class="text-xs md:text-sm normal-case leading-relaxed space-y-4">
             <p>
-              With a background spanning both corporate boardrooms and grassroots initiatives, I bring a unique, dual-lens perspective to organizational communications. My approach is rooted in clarity, empathy, and strategic foresight.
+              With over a decade of experience bridging the gap between corporate boardrooms and grassroots initiatives, I deliver a dual-lens perspective to organizational communications. My methodologies are anchored in radical clarity, empathetic engagement, and rigorous strategic foresight.
             </p>
             <p>
-              Whether guiding a multinational corporation through structural changes or helping an NGO amplify its impact, I craft narratives that resonate with stakeholders and drive measurable action.
+              I specialize in translating complex organizational objectives into compelling narratives. Whether navigating a multinational enterprise through volatile structural transitions or empowering a non-governmental organization to scale its developmental footprint, my focus remains singular: driving measurable, sustainable action through precise communication.
+            </p>
+            <p>
+              I believe that modern public relations is no longer just about perception management—it is an operational imperative that dictates organizational survival and growth.
             </p>
             
-            <div class="pt-3 md:pt-4 border-t border-primary/30 mt-3 md:mt-4">
-              <strong class="uppercase text-[10px] md:text-xs tracking-widest mb-2 block">> Core Competencies</strong>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[10px] md:text-xs">
-                <li>— Strategic Corp. Narrative</li>
-                <li>— Developmental PR</li>
-                <li>— Crisis Management</li>
-                <li>— Stakeholder Engagement</li>
+            <div class="pt-6 mt-6 border-t border-muted/30">
+              <strong class="uppercase text-[10px] md:text-xs tracking-widest mb-3 block">> Core Competencies</strong>
+              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-[10px] md:text-xs font-bold">
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-primary rounded-full"></span> Corporate Narrative</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-primary rounded-full"></span> Developmental PR</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-primary rounded-full"></span> Crisis Mitigation</li>
+                <li class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-primary rounded-full"></span> Stakeholder Synergy</li>
               </ul>
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- RIGHT: Projects Grid (Embedded Links in Images) -->
-      <!-- EDITING GUIDE: Update href="..." and img src="..." below -->
-      <section class="w-full h-[45%] lg:h-full lg:w-1/2 grid grid-cols-2 grid-rows-2 min-h-0 bg-primary">
-        
-        <!-- Project 1 -->
-        <a href="https://example.com/project1" target="_blank" rel="noopener" class="project-card group relative block border-b-2 border-r-2 border-primary overflow-hidden bg-background">
-          <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=1000&auto=format&fit=crop" alt="Synergy" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
-          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <span class="block text-xs font-bold leading-none mb-1">Global Synergy</span>
-            <span class="block text-[10px] text-muted leading-none">Corp. Communications</span>
-          </div>
-          <!-- Persistent Number Indicator -->
-          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">01</div>
-        </a>
-
-        <!-- Project 2 -->
-        <a href="https://example.com/project2" target="_blank" rel="noopener" class="project-card group relative block border-b-2 border-primary overflow-hidden bg-background">
-          <img src="https://images.unsplash.com/photo-1531498860502-7c67cf02f657?q=80&w=1000&auto=format&fit=crop" alt="Water Access" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
-          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <span class="block text-xs font-bold leading-none mb-1">Water Access</span>
-            <span class="block text-[10px] text-muted leading-none">Campaign & PR</span>
-          </div>
-          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">02</div>
-        </a>
-
-        <!-- Project 3 -->
-        <a href="https://example.com/project3" target="_blank" rel="noopener" class="project-card group relative block border-r-2 border-primary overflow-hidden bg-background">
-          <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=1000&auto=format&fit=crop" alt="Crisis Protocol" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
-          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <span class="block text-xs font-bold leading-none mb-1">Crisis Protocol</span>
-            <span class="block text-[10px] text-muted leading-none">Internal Strategy</span>
-          </div>
-          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">03</div>
-        </a>
-
-        <!-- Project 4 -->
-        <a href="https://example.com/project4" target="_blank" rel="noopener" class="project-card group relative block overflow-hidden bg-background">
-          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop" alt="Annual Report" class="project-img absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-100" />
-          <div class="absolute inset-x-0 bottom-0 p-3 bg-background border-t-2 border-primary translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <span class="block text-xs font-bold leading-none mb-1">Annual Report</span>
-            <span class="block text-[10px] text-muted leading-none">Investor Relations</span>
-          </div>
-          <div class="absolute top-0 left-0 bg-background border-b-2 border-r-2 border-primary px-2 py-1 text-xs font-bold">04</div>
-        </a>
 
       </section>
     </main>
 
-    <!-- FOOTER / CONTACT (Row 3) -->
-    <footer class="shrink-0 flex flex-col sm:flex-row justify-between items-center border-t-2 border-primary px-3 py-2 md:px-4 md:py-3 bg-background gap-2 text-[10px] md:text-xs font-bold">
-      <div class="flex gap-3 md:gap-8 flex-wrap justify-center sm:justify-start">
-        <a href="mailto:chorumz@gmail.com" class="hover:text-muted hover:line-through transition-colors">E: chorumz@gmail.com</a>
-        <a href="https://linkedin.com" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">LN: LinkedIn</a>
-        <a href="https://instagram.com/d0nt.blinkk" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">IG: Instagram</a>
-        <a href="#" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">DL: Resume</a>
+    <!-- FOOTER / CONTACT -->
+    <footer class="shrink-0 flex flex-col sm:flex-row justify-between items-center px-3 py-2 md:px-4 md:py-3 bg-background gap-2 text-[10px] md:text-xs font-bold z-10">
+      <div class="flex gap-4 md:gap-8 flex-wrap justify-center sm:justify-start items-center">
+        <a href="mailto:chorumz@gmail.com" class="hover:text-muted hover:line-through transition-colors">E: CHORUMZ@GMAIL.COM</a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener" class="hover:text-muted hover:line-through transition-colors">LN: LINKEDIN</a>
+        
+        <!-- PDF Resume Link -->
+        <a href="./Tate_Resume_2026.pdf" target="_blank" rel="noopener" class="flex items-center gap-1 hover:text-muted hover:line-through transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          DL: RESUME.PDF
+        </a>
       </div>
       
       <div class="text-[9px] md:text-[10px] text-muted text-center sm:text-right uppercase tracking-widest shrink-0">
-        REF: 2026-TM
+        SYS.REF: 2026-TM-MONO
       </div>
     </footer>
 
